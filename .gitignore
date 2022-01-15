@@ -1,0 +1,6 @@
+
+*.log
+*.json
+*.sqlite3
+verlet.lua
+modules/games/raycaster.lua
