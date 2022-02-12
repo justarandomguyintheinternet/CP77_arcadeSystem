@@ -264,4 +264,16 @@ function miscUtils.distance2D(x1, y1, x2, y2)
     return math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
 end
 
+function miscUtils.spendMoney(amount)
+    local tdbid = TweakDBID.new("Items.money")
+    local moneyId = gameItemID.FromTDBID(tdbid)
+    Game.GetTransactionSystem():RemoveItem(Game.GetPlayer(), moneyId, amount)
+end
+
+function miscUtils.playSound(name)
+    local audioEvent = SoundPlayEvent.new ()
+    audioEvent.soundName = name
+    GetPlayer():QueueEvent(audioEvent)
+end
+
 return miscUtils

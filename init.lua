@@ -26,42 +26,44 @@ as = {
 
 function as:new()
     registerForEvent("onInit", function()
-        as.logic = require("modules/logic"):new(as)
-        as.observers.startInputObserver(as)
+        self.logic = require("modules/logic"):new(self)
+        self.observers.startInputObserver(self)
+        self.logic:startCron()
 
         Observe('RadialWheelController', 'OnIsInMenuChanged', function(_, isInMenu) -- Setup observer and GameUI to detect inGame / inMenu
-            as.runtimeData.inMenu = isInMenu
+            self.runtimeData.inMenu = isInMenu
         end)
 
-        as.GameUI.OnSessionStart(function()
-            as.runtimeData.inGame = true
+        self.GameUI.OnSessionStart(function()
+            self.runtimeData.inGame = true
         end)
 
-        as.GameUI.OnSessionEnd(function()
-            as.runtimeData.inGame = false
+        self.GameUI.OnSessionEnd(function()
+            self.runtimeData.inGame = false
+            self.logic.machines = {}
         end)
 
-        as.GameUI.OnPhotoModeOpen(function()
-            as.runtimeData.inMenu = true
+        self.GameUI.OnPhotoModeOpen(function()
+            self.runtimeData.inMenu = true
         end)
 
-        as.GameUI.OnPhotoModeClose(function()
-            as.runtimeData.inMenu = false
+        self.GameUI.OnPhotoModeClose(function()
+            self.runtimeData.inMenu = false
         end)
 
-        as.runtimeData.inGame = not as.GameUI.IsDetached() -- Required to check if ingame after reloading all mods
+        self.runtimeData.inGame = not self.GameUI.IsDetached() -- Required to check if ingame after reloading all mods
     end)
 
     registerForEvent("onShutdown", function ()
-        if as.logic.currentWorkspot then
-            as.logic.currentWorkspot:forceExit()
+        if self.logic.currentWorkspot then
+            self.logic.currentWorkspot:forceExit()
         end
     end)
 
     registerForEvent("onUpdate", function (deltaTime)
-        if (not as.runtimeData.inMenu) and as.runtimeData.inGame then
-		    as.Cron.Update(deltaTime)
-            as.logic:run(deltaTime)
+        if (not self.runtimeData.inMenu) and self.runtimeData.inGame then
+		    self.Cron.Update(deltaTime)
+            self.logic:run(deltaTime)
         end
     end)
 
@@ -70,14 +72,14 @@ function as:new()
     end)
 
     registerForEvent("onOverlayOpen", function()
-        as.runtimeData.cetOpen = true
+        self.runtimeData.cetOpen = true
     end)
 
     registerForEvent("onOverlayClose", function()
-        as.runtimeData.cetOpen = false
+        self.runtimeData.cetOpen = false
     end)
 
-    return as
+    return self
 
 end
 

@@ -43,7 +43,7 @@ function observers.startInputObserver(as)
 
     Observe("ArcadeMachineInkGameController", "PlayVideo", function (self) -- For machines that dont get despawned, e.g. spawned with AMM
         local this = self:GetOwner()
-        Cron.After(0.1, function ()
+        Cron.After(0.5, function ()
             as.logic:addMachine(this)
         end)
     end)

@@ -2,7 +2,6 @@ local color = require("modules/ui/color")
 local ink = require("modules/ui/inkHelper")
 local Cron = require("modules/external/Cron")
 local utils = require("modules/util/utils")
-local tween = require("modules/external/tween/tween") -- https://github.com/kikito/tween.lua
 
 game = {}
 
@@ -24,20 +23,16 @@ function game:new(arcadeSys, arcade)
 	o.selectedItem = 1
 
 	o.gameScreen = nil
-	o.gameBG = {}
-	o.tubes = {}
+
 	o.player = nil
 	o.animeCron = nil
 
-	o.tubesPassed = 0
+	o.score = 0
 	o.scoreInk = nil
-	o.startWidth = 160
-	o.startHeight = 120
 
 	o.gameOver = false
-	o.gameText = nil
-	o.overText = nil
-	o.scoreText = nil
+	o.gameOverText = nil
+	o.hsText = nil
 	o.continueText = nil
 
 	o.highscore = 0
@@ -83,8 +78,8 @@ function game:showDefault() -- Show the default home screen
 	ink.rect(160, 310, 400, 400, HDRColor.new({ Red = 0, Green = 0.4, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 	ink.rect(255, 320, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 
-    ink.text("Fappy", 40, 0, 50, color.yellow):Reparent(area, -1)
-    ink.text("Berd", 100, 50, 40, color.red):Reparent(area, -1)
+    ink.text("Panzer", 40, 0, 50, color.yellow):Reparent(area, -1)
+    ink.text("Game", 100, 50, 40, color.red):Reparent(area, -1)
 
     local buttons = ink.canvas(110, 110)
     buttons:Reparent(self.menuScreen, -1)
@@ -101,11 +96,7 @@ end
 
 function game:update(dt) -- Runs every frame once fully in workspot
 	if self.inGame and not self.gameOver then
-		self.player:update(dt)
 		self:renderGame(dt)
-		if self.player.y < -10 or self.player.y > self.screenSize.y + 10 then
-			self:lost()
-		end
 	end
 end
 
@@ -131,7 +122,7 @@ function game:handleInput(action) -- Passed forward from onAction
 		end
 	elseif actionName == 'Jump' then
 		if actionType == 'BUTTON_PRESSED' then
-			self:handleGameInput("jump")
+
 		end
 	end
 end
@@ -169,13 +160,6 @@ end
 
 function game:handleGameInput(key)
 	if not self.inGame then return end
-
-	if key == "jump" then
-		self.player:jump()
-	end
-	if self.gameOver then
-		self:switchToMenu()
-	end
 end
 
 function game:goBack()
@@ -184,7 +168,6 @@ function game:goBack()
 	elseif self.inBoard then
 		self:switchToMenu()
 	elseif self.inGame then
-		-- Add logic to stop and lose game
 		self:switchToMenu()
 	end
 end
@@ -195,13 +178,10 @@ function game:switchToMenu()
 	if self.boardScreen then self.boardScreen:SetVisible(false) end
 
 	if self.inGame then
-		self.tubes = {}
-		self.tubesPassed = 0
 		self.gameOver = false
 
-		self.gameText:SetVisible(false)
-		self.overText:SetVisible(false)
-		self.scoreText:SetVisible(false)
+		self.gameOverText:SetVisible(false)
+		self.hsText:SetVisible(false)
 		self.continueText:SetVisible(false)
 
 		self.gameScreen = nil
@@ -210,10 +190,6 @@ function game:switchToMenu()
 	self.inMenu = true
 	self.inBoard = false
 	self.inGame = false
-
-	if self.animeCron then
-		Cron.Halt(self.animeCron)
-	end
 end
 
 function game:switchToGame()
@@ -226,10 +202,6 @@ function game:switchToGame()
 
 	self.inMenu = false
 	self.inGame = true
-
-	self.animeCron = Cron.Every(0.2, function ()
-		self.player:updateAnimation()
-	end)
 end
 
 function game:switchToBoard() -- Switch to leaderboard
@@ -242,49 +214,26 @@ function game:switchToBoard() -- Switch to leaderboard
 	self.inMenu = false
 	self.inBoard = true
 end
--- base/gameplay/gui/wigets/minimap
+
 function game:initGame()
 	self.gameScreen = ink.canvas(0, 0, inkEAnchor.TopLeft)
 	self.gameScreen:Reparent(self.screen, -1)
 	self.gameScreen:SetVisible(false)
 
-	ink.rect(160, 120, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 1, Alpha = 1.0 }), 0, Vector2.new({X = 0.5, Y = 0.5})):Reparent(self.gameScreen, -1) -- bg
-	ink.circle(250, 10, 65, HDRColor.new({ Red = 1, Green = 0.75, Blue = 0, Alpha = 1.0 })):Reparent(self.gameScreen, -1) -- sun
-
-	for x = 1, 10 do -- mountains
-		local x = (x * 100) - 150
-		local y = 295 + math.random() * 100
-		local r = ink.rect(x, y, 400, 400, HDRColor.new({ Red = 0, Green = 0.5 + math.random() * 0.5, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5}))
-		r:Reparent(self.gameScreen, -1)
-		table.insert(self.gameBG, r)
-	end
-
-	local tube = require("modules/games/flappy_bird/tube")
-	for x = 1, 10 do -- tubes
-		local t = tube:new(x * self.startWidth + 150, 50 + math.random() * 150, self.startHeight, HDRColor.new({ Red = 0, Green = 0, Blue = 1, Alpha = 1.0 }))
-		t:spawn(self.gameScreen)
-		table.insert(self.tubes, t)
-	end
-
-	self.player = require("modules/games/flappy_bird/player"):new(100, self.screenSize.y / 2)
-	self.player:spawn(self.gameScreen)
+	ink.image(0, 0, self.screenSize.x, 600, "base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas", "BG", 0, inkBrushMirrorType.Vertical).pos:Reparent(self.gameScreen, -1)
 
 	self.scoreInk = ink.text("Score: 0", 20, 10, 20)
 	self.scoreInk:Reparent(self.gameScreen, -1)
 
-	self.gameText = ink.text("GAME ", 35, 90, 55, color.red)
-	self.gameText:SetVisible(false)
-	self.gameText:Reparent(self.gameScreen, -1)
+	self.gameOverText = ink.text("GAME OVER", 35, 90, 55, color.red)
+	self.gameOverText:SetVisible(false)
+	self.gameOverText:Reparent(self.gameScreen, -1)
 
-	self.overText = ink.text("OVER", 175, 90, 55, color.red)
-	self.overText:SetVisible(false)
-	self.overText:Reparent(self.gameScreen, -1)
+	self.hsText = ink.text("", 85, 140, 25, HDRColor.new({ Red = 0, Green = 1.25, Blue = 0, Alpha = 1 }))
+	self.hsText:SetVisible(false)
+	self.hsText:Reparent(self.gameScreen, -1)
 
-	self.scoreText = ink.text("", 85, 140, 25, HDRColor.new({ Red = 0, Green = 1.25, Blue = 0, Alpha = 1 }))
-	self.scoreText:SetVisible(false)
-	self.scoreText:Reparent(self.gameScreen, -1)
-
-	self.continueText = ink.text("Press JUMP to continue", 85, 210, 15)
+	self.continueText = ink.text("Press SHOOT to continue", 85, 210, 15)
 	self.continueText:SetVisible(false)
 	self.continueText:Reparent(self.gameScreen, -1)
 end
@@ -295,7 +244,7 @@ function game:initBoard()
 	self.boardScreen:SetVisible(false)
 
 	self.leaderboard = require("modules/ui/leaderboard"):new(10, function ()
-		return math.random(4, 87)
+		return math.random(500, 500000)
 	end)
 	self.leaderboard:spawn(self.highscore):Reparent(self.boardScreen, -1)
 	self.leaderboard.canvas:SetMargin(110, 28, 0, 0)
@@ -359,44 +308,24 @@ end
 
 function game:lost()
 	self.gameOver = true
-	self.gameText:SetVisible(true)
-	self.overText:SetVisible(true)
+	self.gameOverText:SetVisible(true)
 
-	if self.tubesPassed > self.highscore then
-		self.highscore = self.tubesPassed
+	if self.score > self.highscore then
+		self.highscore = self.score
 		self:saveHighscore(self.highscore)
 		if self.boardScreen then
 			self.leaderboard:update(self.highscore):Reparent(self.boardScreen, -1)
 			self.leaderboard.canvas:SetMargin(110, 28, 0, 0)
 		end
-		self.scoreText:SetVisible(true)
-		self.scoreText:SetText(tostring("New Highscore: " .. self.tubesPassed))
+		self.hsText:SetVisible(true)
+		self.hsText:SetText(tostring("New Highscore: " .. self.score))
 	end
 
 	self.continueText:SetVisible(true)
-
-	if self.animeCron then
-		Cron.Halt(self.animeCron)
-	end
-end
-
-function game:getRightestTube()
-	local x = 0
-	local tube = nil
-
-	for _, t in pairs(self.tubes) do
-		if t.x > x then
-			x = t.x
-			tube = t
-		end
-	end
-
-	return tube
 end
 
 function game:renderGame(dt)
 	self:renderBG(dt)
-	self:renderTubes(dt)
 end
 
 function game:selectMenuItem() -- Moves the selector rectangle
@@ -407,12 +336,12 @@ function game:selectMenuItem() -- Moves the selector rectangle
 end
 
 function game:loadHighscore()
-	CName.add("arcade_bird_hs")
-	self.highscore = Game.GetQuestsSystem():GetFactStr('arcade_bird_hs')
+	CName.add("arcade_bird_panzer")
+	self.highscore = Game.GetQuestsSystem():GetFactStr('arcade_bird_panzer')
 end
 
 function game:saveHighscore(score)
-	Game.GetQuestsSystem():SetFactStr('arcade_bird_hs', score)
+	Game.GetQuestsSystem():SetFactStr('arcade_bird_panzer', score)
 end
 
 function game:stop() -- Gets called when leaving workspot
