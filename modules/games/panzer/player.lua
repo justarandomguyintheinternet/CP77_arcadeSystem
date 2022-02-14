@@ -1,36 +1,56 @@
 local ink = require("modules/ui/inkHelper")
+local Cron = require("modules/external/Cron")
 
 player = {}
 
-function player:new(x, y)
+function player:new(x, y, game)
 	local o = {}
 
+    o.game = game
+    o.screen = screen
     o.x = x
     o.y = y
+    o.movementSpeed = 90
 
-    o.velY = 0
-    o.grav = 0.075
-    o.closestTube = 100
-
-    o.ink = nil
-    o.birdInk = nil
+    o.size = {x = 38, y = 60}
+    o.image = nil
     o.animeFrame = 1
+
+    o.health = 100
+    o.shootDelay = nil
 
 	self.__index = self
    	return setmetatable(o, self)
 end
 
 function player:spawn(screen)
-    self.birdInk = ink.image(100, 100, 60, 30, 'base\\gameplay\\gui\\world\\vending_machines\\atlas_roach_race.inkatlas', 'gryphon_1', 0, inkBrushMirrorType.Vertical)
-    self.birdInk.pos:Reparent(screen, -1)
+    self.screen = screen
+    self.image = ink.image(self.x, self.y, self.size.x, self.size.y, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', 'shmup_ship', 0, inkBrushMirrorType.Vertical)
+    self.image.pos:Reparent(screen, -1)
 end
 
 function player:update(dt)
-    self.velY = self.velY + self.grav * (dt * 80)
-    self.y = self.y + self.velY
+    if self.game.input.forward then
+        self.y = self.y - self.movementSpeed * dt
+    end
+    if self.game.input.backwards then
+        self.y = self.y + self.movementSpeed * dt
+    end
+    if self.game.input.right then
+        self.x = self.x + self.movementSpeed * dt
+    end
+    if self.game.input.left then
+        self.x = self.x - self.movementSpeed * dt
+    end
 
-    self.birdInk.pos:SetMargin(self.x - 30, self.y - 15, 0, 0)
-    self.birdInk.image:SetRotation(self.velY * 10)
+    self.x = math.min(self.game.screenSize.x - self.size.x / 2, math.max(0 - self.size.x / 2, self.x))
+    self.y= math.min(self.game.screenSize.y - self.size.y / 2, math.max(0 - self.size.y / 2, self.y))
+
+    self.image.pos:SetMargin(self.x, self.y, 0, 0)
+
+    if self.game.input.shoot then
+        self:shoot()
+    end
 end
 
 function player:updateAnimation()
@@ -42,8 +62,18 @@ function player:updateAnimation()
     self.birdInk.image:SetTexturePart(tostring("gryphon_" .. self.animeFrame))
 end
 
-function player:jump()
-    self.velY = -2.5
+function player:shoot()
+    if self.shootDelay then return end
+
+    local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y, 0, 100, 25, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup_projectile", {x = 8, y = 8})
+    p:spawn(self.screen)
+
+    table.insert(self.game.projectiles, p)
+
+    self.shootDelay = true
+    Cron.After(0.2, function ()
+        self.shootDelay = false
+    end)
 end
 
 return player

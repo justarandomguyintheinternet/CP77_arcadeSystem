@@ -25,6 +25,7 @@ function game:new(arcadeSys, arcade)
 	o.gameScreen = nil
 
 	o.player = nil
+	o.input = {forward = false, backwards = false, right = false, left = false, shoot = false}
 	o.animeCron = nil
 
 	o.score = 0
@@ -38,6 +39,12 @@ function game:new(arcadeSys, arcade)
 	o.highscore = 0
 	o.boardScreen = nil
 	o.leaderboard = nil
+
+	o.bg1 = nil
+	o.bg2 = nil
+	o.bgY = 600
+
+	o.projectiles = {}
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -96,6 +103,8 @@ end
 
 function game:update(dt) -- Runs every frame once fully in workspot
 	if self.inGame and not self.gameOver then
+		self.player:update(dt)
+		self:updateProjectiles(dt)
 		self:renderGame(dt)
 	end
 end
@@ -122,7 +131,33 @@ function game:handleInput(action) -- Passed forward from onAction
 		end
 	elseif actionName == 'Jump' then
 		if actionType == 'BUTTON_PRESSED' then
-
+			self.input.shoot = true
+		elseif actionType == 'BUTTON_RELEASED' then
+			self.input.shoot = false
+		end
+	elseif actionName == 'Forward' then
+		if actionType == 'BUTTON_PRESSED' then
+			self.input.forward = true
+		elseif actionType == 'BUTTON_RELEASED' then
+			self.input.forward = false
+		end
+	elseif actionName == 'Back' then
+		if actionType == 'BUTTON_PRESSED' then
+			self.input.backwards = true
+		elseif actionType == 'BUTTON_RELEASED' then
+			self.input.backwards = false
+		end
+	elseif actionName == 'Left' then
+		if actionType == 'BUTTON_PRESSED' then
+			self.input.left = true
+		elseif actionType == 'BUTTON_RELEASED' then
+			self.input.left = false
+		end
+	elseif actionName == 'Right' then
+		if actionType == 'BUTTON_PRESSED' then
+			self.input.right = true
+		elseif actionType == 'BUTTON_RELEASED' then
+			self.input.right = false
 		end
 	end
 end
@@ -216,12 +251,18 @@ function game:switchToBoard() -- Switch to leaderboard
 end
 
 function game:initGame()
+	-- Init game screen canvas
 	self.gameScreen = ink.canvas(0, 0, inkEAnchor.TopLeft)
 	self.gameScreen:Reparent(self.screen, -1)
 	self.gameScreen:SetVisible(false)
 
-	ink.image(0, 0, self.screenSize.x, 600, "base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas", "BG", 0, inkBrushMirrorType.Vertical).pos:Reparent(self.gameScreen, -1)
+	-- Init both BG images
+	self.bg1 = ink.image(0, 0, self.screenSize.x, self.bgY + 3, "base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas", "BG", 0, inkBrushMirrorType.Vertical)
+	self.bg1.pos:Reparent(self.gameScreen, -1)
+	self.bg2 = ink.image(0, -self.bgY, self.screenSize.x, self.bgY + 3, "base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas", "BG", 0, inkBrushMirrorType.Vertical)
+	self.bg2.pos:Reparent(self.gameScreen, -1)
 
+	-- Score text during gameplay
 	self.scoreInk = ink.text("Score: 0", 20, 10, 20)
 	self.scoreInk:Reparent(self.gameScreen, -1)
 
@@ -229,6 +270,7 @@ function game:initGame()
 	self.gameOverText:SetVisible(false)
 	self.gameOverText:Reparent(self.gameScreen, -1)
 
+	-- Score text when game is over
 	self.hsText = ink.text("", 85, 140, 25, HDRColor.new({ Red = 0, Green = 1.25, Blue = 0, Alpha = 1 }))
 	self.hsText:SetVisible(false)
 	self.hsText:Reparent(self.gameScreen, -1)
@@ -236,6 +278,10 @@ function game:initGame()
 	self.continueText = ink.text("Press SHOOT to continue", 85, 210, 15)
 	self.continueText:SetVisible(false)
 	self.continueText:Reparent(self.gameScreen, -1)
+
+	-- Spawn player
+	self.player = require("modules/games/panzer/player"):new(self.screenSize.x / 2, self.screenSize.y / 2, self)
+	self.player:spawn(self.gameScreen)
 end
 
 function game:initBoard()
@@ -251,22 +297,23 @@ function game:initBoard()
 end
 
 function game:renderBG(dt) -- Move background
-	local add = math.min(self.tubesPassed / 2, 20)
-	local moveX = (dt * (50 + add))
+	local ySpeed = 0.3 * (dt / 0.016)
 
-	for _, rect in pairs(self.gameBG) do
-		local margin = rect:GetMargin()
-
-		if margin.left - moveX < -200 then
-			local y = 295 + math.random() * 100
-			margin.left = margin.left + 1000
-			margin.top = y
-			rect:SetTintColor(HDRColor.new({ Red = 0, Green = 0.5 + math.random() * 0.5, Blue = 0, Alpha = 1.0 }))
-		end
-
-		margin = inkMargin.new({ left = margin.left - moveX, top = margin.top, right = 0.0, bottom = 0.0 })
-		rect:SetMargin(margin)
+	local margin = self.bg1.pos:GetMargin()
+	if margin.top > self.bgY then
+		margin.top = -self.bgY
 	end
+
+	margin.top = margin.top + ySpeed
+	self.bg1.pos:SetMargin(margin)
+
+	local margin = self.bg2.pos:GetMargin()
+	if margin.top > self.bgY then
+		margin.top = -self.bgY
+	end
+
+	margin.top = margin.top + ySpeed
+	self.bg2.pos:SetMargin(margin)
 end
 
 function game:renderTubes(dt) -- Draw and move the tubes
@@ -328,6 +375,12 @@ function game:renderGame(dt)
 	self:renderBG(dt)
 end
 
+function game:updateProjectiles(dt)
+	for _, p in pairs(self.projectiles) do
+		p:update(dt)
+	end
+end
+
 function game:selectMenuItem() -- Moves the selector rectangle
 	local i = self.selectedItem - 1
 	local height = 30
@@ -336,12 +389,12 @@ function game:selectMenuItem() -- Moves the selector rectangle
 end
 
 function game:loadHighscore()
-	CName.add("arcade_bird_panzer")
-	self.highscore = Game.GetQuestsSystem():GetFactStr('arcade_bird_panzer')
+	CName.add("arcade_panzer")
+	self.highscore = Game.GetQuestsSystem():GetFactStr('arcade_panzer')
 end
 
 function game:saveHighscore(score)
-	Game.GetQuestsSystem():SetFactStr('arcade_bird_panzer', score)
+	Game.GetQuestsSystem():SetFactStr('arcade_panzer', score)
 end
 
 function game:stop() -- Gets called when leaving workspot

@@ -21,6 +21,7 @@ end
 
 function logic:run(dt) -- Runs inside onUpdate
 	local targetData = self:looksAtArcade()
+
 	if targetData.isArcade and self:getArcadeByObject(targetData.target) and not self.currentWorkspot then
 		utils.createInteractionHub("Play", "UI_Apply", true)
 		self.hudActive = true
@@ -39,6 +40,7 @@ end
 
 function logic:startCron()
 	Cron.Every(0.25, function ()
+		-- Add machines visually
         local searchQuery = Game["TSQ_ALL;"]()
         searchQuery.maxDistance = 25
         searchQuery.includeSecondaryTargets = false
@@ -50,6 +52,13 @@ function logic:startCron()
 
 			if obj and obj:GetClassName().value == "ArcadeMachine" then
 				self:addMachine(obj)
+			end
+		end
+
+		-- Fallback in case that the observer does not work properly
+		for k, machine in pairs(self.machines) do
+			if not machine:getObject() then
+				self.machines[k] = nil
 			end
 		end
 	end)
@@ -77,7 +86,7 @@ end
 
 function logic:getArcadeByObject(obj)
 	for k, machine in ipairs(self.machines) do
-		if utils.isSameInstance(machine:getObject(), obj) then
+		if utils.isSameInstance(machine:getObject(), obj) or not machine:getObject() then
 			return k, machine
 		end
 	end
@@ -87,11 +96,15 @@ end
 
 function logic:looksAtArcade()
 	local target = Game.GetTargetingSystem():GetLookAtObject(Game.GetPlayer(), false, false)
-	if not target then return {target = nil, isArcade = false} end
+	if not target then
+		return {target = nil, isArcade = false}
+	end
 
-	self:addMachine(target)
+	if target:GetClassName().value == "ArcadeMachine" then self:addMachine(target) end
 
-	if Vector4.GetAngleBetween(target:GetWorldForward(), utils.subVector(target:GetWorldPosition(), GetPlayer():GetWorldPosition())) < 90 then return end
+	if Vector4.GetAngleBetween(target:GetWorldForward(), utils.subVector(target:GetWorldPosition(), GetPlayer():GetWorldPosition())) < 90 then
+		return {target = target, isArcade = false}
+	end
 	if (target:GetWorldPosition():Distance(GetPlayer():GetWorldPosition()) < self.arcadeRange) and target:GetClassName().value == "ArcadeMachine" then
 		return {target = target, isArcade = true}
 	else
@@ -100,11 +113,11 @@ function logic:looksAtArcade()
 end
 
 function logic:onInteract() -- Called from onAction observer
-	if self:looksAtArcade().isArcade and not self.currentWorkspot then
-		local target = Game.GetTargetingSystem():GetLookAtObject(Game.GetPlayer(), false, false)
-		_, self.currentArcade = self:getArcadeByObject(target)
+	local targetData = self:looksAtArcade()
+	if targetData.isArcade and not self.currentWorkspot then
+		_, self.currentArcade = self:getArcadeByObject(targetData.target)
 		self.currentWorkspot = require("modules/workspot"):new(self.as)
-		self.currentWorkspot:enter(target)
+		self.currentWorkspot:enter(targetData.target)
 	end
 end
 
