@@ -10,13 +10,14 @@ function player:new(x, y, game)
     o.screen = screen
     o.x = x
     o.y = y
-    o.movementSpeed = 90
+    o.movementSpeed = 120
 
     o.size = {x = 38, y = 60}
     o.image = nil
     o.animeFrame = 1
 
     o.health = 100
+    o.fireRate = 0.15
     o.shootDelay = nil
 
 	self.__index = self
@@ -53,26 +54,36 @@ function player:update(dt)
     end
 end
 
-function player:updateAnimation()
-    self.animeFrame = self.animeFrame + 1
-    if self.animeFrame > 5 then
-        self.animeFrame = 1
-    end
-
-    self.birdInk.image:SetTexturePart(tostring("gryphon_" .. self.animeFrame))
-end
-
 function player:shoot()
     if self.shootDelay then return end
 
-    local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y, 0, 100, 25, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup_projectile", {x = 8, y = 8})
+    local p = require("modules/games/panzer/projectile"):new(self.game)
+    p.x = self.x + (self.size.x / 2) - 4
+    p.y = self.y
+    p.velY = 100
+    p.damage = 25
+    p.targetTag = "enemy"
+    p.atlasPath = 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas'
+    p.atlasPart = "shmup_projectile"
+    p.size = {x = 8, y = 8}
+
     p:spawn(self.screen)
 
     table.insert(self.game.projectiles, p)
 
     self.shootDelay = true
-    Cron.After(0.2, function ()
+    Cron.After(self.fireRate, function ()
         self.shootDelay = false
+    end)
+end
+
+function player:onDamage(damage)
+    self.health = self.health - damage
+
+    self.image.image:SetOpacity(0.6)
+
+    Cron.After(0.1, function ()
+        self.image.image:SetOpacity(1)
     end)
 end
 

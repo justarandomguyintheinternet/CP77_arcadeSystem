@@ -31,10 +31,10 @@ function logic:run(dt) -- Runs inside onUpdate
 	end
 
 	if self.currentWorkspot then
-		self.currentWorkspot:update(dt)
 		if self.currentWorkspot.inWorkspot then
 			self.currentArcade.game:update(dt)
 		end
+		self.currentWorkspot:update(dt)
 	end
 end
 

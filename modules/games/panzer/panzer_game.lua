@@ -35,6 +35,7 @@ function game:new(arcadeSys, arcade)
 	o.gameOverText = nil
 	o.hsText = nil
 	o.continueText = nil
+	o.healthText = nil
 
 	o.highscore = 0
 	o.boardScreen = nil
@@ -45,6 +46,8 @@ function game:new(arcadeSys, arcade)
 	o.bgY = 600
 
 	o.projectiles = {}
+	o.enemies = {}
+	o.explosions = {}
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -78,7 +81,6 @@ function game:showDefault() -- Show the default home screen
 
 	ink.rect(160, 120, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 1, Alpha = 1.0 }), 0, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1) -- bg
 	ink.circle(250, 10, 65, HDRColor.new({ Red = 1, Green = 0.75, Blue = 0, Alpha = 1.0 })):Reparent(area, -1)
-	--ink.rect(-40, -10, 400, 20, HDRColor.new({ Red = 1, Green = 1, Blue = 1, Alpha = 1.0 }), 0):Reparent(area, -1) -- clouds
 
 	ink.rect(20, 300, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 	ink.rect(100, 280, 400, 400, HDRColor.new({ Red = 0, Green = 0.9, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
@@ -105,7 +107,9 @@ function game:update(dt) -- Runs every frame once fully in workspot
 	if self.inGame and not self.gameOver then
 		self.player:update(dt)
 		self:updateProjectiles(dt)
-		self:renderGame(dt)
+		self:updateEnemies(dt)
+		self:renderBG(dt)
+		self:renderHealth()
 	end
 end
 
@@ -193,10 +197,6 @@ function game:handleMenuInput(key)
 	end
 end
 
-function game:handleGameInput(key)
-	if not self.inGame then return end
-end
-
 function game:goBack()
 	if self.inMenu then
 		self.as.logic:tryExitWorkspot()
@@ -282,6 +282,19 @@ function game:initGame()
 	-- Spawn player
 	self.player = require("modules/games/panzer/player"):new(self.screenSize.x / 2, self.screenSize.y / 2, self)
 	self.player:spawn(self.gameScreen)
+
+	-- Player health text
+	self.healthText = ink.text(tostring("HP: " .. self.player.health), 240, 10, 20)
+	self.healthText:Reparent(self.gameScreen, -1)
+
+	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 50, 0, 5, 100)
+	e:spawn(self.gameScreen)
+
+	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 150, 0, 3, 500)
+	e:spawn(self.gameScreen)
+
+	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 250, 0, 7, 100)
+	e:spawn(self.gameScreen)
 end
 
 function game:initBoard()
@@ -371,13 +384,32 @@ function game:lost()
 	self.continueText:SetVisible(true)
 end
 
-function game:renderGame(dt)
-	self:renderBG(dt)
+function game:renderHealth()
+	self.healthText:SetText(tostring("HP: " .. self.player.health))
 end
 
 function game:updateProjectiles(dt)
 	for _, p in pairs(self.projectiles) do
 		p:update(dt)
+		if p.targetTag == "player" and p.x + p.size.x > self.player.x and p.x < self.player.x + self.player.size.x and p.y + p.size.y > self.player.y and p.y < self.player.y + self.player.size.y then
+			self.player:onDamage(p.damage)
+			p:despawn()
+		end
+
+		if p.targetTag == "enemy" then
+			for _, e in pairs(self.enemies) do
+				if p.x + p.size.x > e.x and p.x < e.x + e.size.x and p.y + p.size.y > e.y and p.y < e.y + e.size.y then
+					e:onDamage(p.damage)
+					p:despawn()
+				end
+			end
+		end
+	end
+end
+
+function game:updateEnemies(dt)
+	for _, e in pairs(self.enemies) do
+		e:update(dt)
 	end
 end
 
