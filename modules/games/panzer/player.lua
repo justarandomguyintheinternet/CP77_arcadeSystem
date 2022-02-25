@@ -68,6 +68,7 @@ function player:shoot()
     p.size = {x = 8, y = 8}
 
     p:spawn(self.screen)
+    p.image.image:SetTintColor(color.new(0, 2, 0, 2))
 
     table.insert(self.game.projectiles, p)
 

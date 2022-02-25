@@ -44,6 +44,7 @@ function game:new(arcadeSys, arcade)
 	o.bg1 = nil
 	o.bg2 = nil
 	o.bgY = 600
+	o.scrollSpeed = 0.3
 
 	o.projectiles = {}
 	o.enemies = {}
@@ -287,14 +288,15 @@ function game:initGame()
 	self.healthText = ink.text(tostring("HP: " .. self.player.health), 240, 10, 20)
 	self.healthText:Reparent(self.gameScreen, -1)
 
-	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 50, 0, 5, 100)
+	local e = require("modules/games/panzer/enemies/mech"):new(self, 50, 0, 5, 100)
 	e:spawn(self.gameScreen)
 
-	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 150, 0, 3, 500)
-	e:spawn(self.gameScreen)
+	-- local e = require("modules/games/panzer/enemies/stationary"):new(self, 150, 0, 150)
+	-- e:spawn(self.gameScreen)
+end
 
-	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 250, 0, 7, 100)
-	e:spawn(self.gameScreen)
+function game:startEnemySpawning()
+
 end
 
 function game:initBoard()
@@ -310,7 +312,7 @@ function game:initBoard()
 end
 
 function game:renderBG(dt) -- Move background
-	local ySpeed = 0.3 * (dt / 0.016)
+	local ySpeed = self.scrollSpeed * (dt / 0.016)
 
 	local margin = self.bg1.pos:GetMargin()
 	if margin.top > self.bgY then
