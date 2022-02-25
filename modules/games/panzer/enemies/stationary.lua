@@ -4,7 +4,7 @@ local Cron = require("modules/external/Cron")
 
 enemy = {}
 
-function enemy:new(game, x, y, health)
+function enemy:new(game, x, y, health, movementSpeed, damage)
 	local o = {}
 
     o.game = game
@@ -26,7 +26,7 @@ function enemy:new(game, x, y, health)
     o.recovery = false
 
     o.bulletSize = {x = 5, y = 5}
-    o.damage = 5
+    o.damage = damage or 5
 
 	self.__index = self
     return setmetatable(o, self)
@@ -59,6 +59,8 @@ function enemy:spawn(screen)
             local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, 120, ySpeed, self.damage, "player", self.atlasPath, "shmup_projectile", self.bulletSize, false)
             p:spawn(screen)
             table.insert(self.game.projectiles, p)
+
+            utils.playSound("w_gun_npc_toygun_fire_voice_01", 4)
 
             if self.currentBurst == self.burstLength then
                 self.recovery = true
@@ -95,6 +97,7 @@ end
 
 function enemy:destroy()
     self:despawn()
+    utils.playSound("q112_billboard_explosion", 2)
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)

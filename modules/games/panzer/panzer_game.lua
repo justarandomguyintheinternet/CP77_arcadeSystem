@@ -220,6 +220,14 @@ function game:switchToMenu()
 		self.hsText:SetVisible(false)
 		self.continueText:SetVisible(false)
 
+		for _, e in pairs(self.enemies) do
+			e:despawn()
+		end
+
+		for _, p in pairs(self.projectiles) do
+			p:despawn()
+		end
+
 		self.gameScreen = nil
 	end
 
@@ -288,11 +296,17 @@ function game:initGame()
 	self.healthText = ink.text(tostring("HP: " .. self.player.health), 240, 10, 20)
 	self.healthText:Reparent(self.gameScreen, -1)
 
-	local e = require("modules/games/panzer/enemies/mech"):new(self, 50, 0, 5, 100)
+	local e = require("modules/games/panzer/enemies/mech"):new(self, 25, 0, 6, 100)
 	e:spawn(self.gameScreen)
 
-	-- local e = require("modules/games/panzer/enemies/stationary"):new(self, 150, 0, 150)
-	-- e:spawn(self.gameScreen)
+	local e = require("modules/games/panzer/enemies/drone"):new(self, 50, 0, 5, 100)
+	e:spawn(self.gameScreen)
+
+	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 80, 0, 4, 100)
+	e:spawn(self.gameScreen)
+
+	local e = require("modules/games/panzer/enemies/stationary"):new(self, 150, 0, 150)
+	e:spawn(self.gameScreen)
 end
 
 function game:startEnemySpawning()

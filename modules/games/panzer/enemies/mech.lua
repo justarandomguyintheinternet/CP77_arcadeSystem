@@ -4,7 +4,7 @@ local Cron = require("modules/external/Cron")
 
 enemy = {}
 
-function enemy:new(game, x, y, scrollSpeed, health)
+function enemy:new(game, x, y, scrollSpeed, health, movementSpeed, damage)
 	local o = {}
 
     o.game = game
@@ -14,7 +14,7 @@ function enemy:new(game, x, y, scrollSpeed, health)
     o.y = y
     o.size = {x = 25, y = 30}
     o.scrollSpeed = scrollSpeed
-    o.speed = 7
+    o.speed = movementSpeed or 120
     o.health = health
 
     o.image = nil
@@ -35,6 +35,7 @@ function enemy:new(game, x, y, scrollSpeed, health)
     o.targetX = 0
 
     o.fireRate = 0.4
+    o.damage = damage or 5
 
 	self.__index = self
     return setmetatable(o, self)
@@ -56,9 +57,10 @@ function enemy:spawn(screen)
     end)
 
     self.shootCron = Cron.Every(self.fireRate,  function()
-        local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, 0, -120, 20, "player", self.atlasPath, "shmup-title_flare2", {x = 6, y = 6}, false)
+        local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, 0, -120, self.damage, "player", self.atlasPath, "shmup-title_flare2", {x = 6, y = 6}, false)
         p:spawn(screen)
         table.insert(self.game.projectiles, p)
+        utils.playSound("w_gun_npc_toygun_fire_voice_01")
     end)
 
     self.targetX = math.random(0, self.game.screenSize.x)
@@ -70,7 +72,7 @@ function enemy:update(dt)
     self.y = self.y + self.scrollSpeed * dt
 
     if math.abs(self.targetX - self.x) > 14 then
-        self.x = self.x + (self.targetX - self.x) / 120
+        self.x = self.x + (self.targetX - self.x) / self.speed
     else
         self.targetX = math.random(0, self.game.screenSize.x)
     end
@@ -94,6 +96,7 @@ end
 
 function enemy:destroy()
     self:despawn()
+    utils.playSound("dev_fire_extinguisher_explode", 2)
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)

@@ -1,5 +1,6 @@
 local ink = require("modules/ui/inkHelper")
 local Cron = require("modules/external/Cron")
+local utils = require("modules/util/utils")
 
 player = {}
 
@@ -72,6 +73,8 @@ function player:shoot()
 
     table.insert(self.game.projectiles, p)
 
+    utils.playSound("w_gun_npc_achilles_fire_charged_voice_03")
+
     self.shootDelay = true
     Cron.After(self.fireRate, function ()
         self.shootDelay = false
@@ -79,6 +82,8 @@ function player:shoot()
 end
 
 function player:onDamage(damage)
+    utils.playSound("w_feedback_player_damage", 5)
+
     self.health = self.health - damage
 
     self.image.image:SetOpacity(0.6)
@@ -86,6 +91,10 @@ function player:onDamage(damage)
     Cron.After(0.1, function ()
         self.image.image:SetOpacity(1)
     end)
+end
+
+function player:onDeath()
+    utils.playSound("v_panzer_dst_fx_explosion")
 end
 
 return player

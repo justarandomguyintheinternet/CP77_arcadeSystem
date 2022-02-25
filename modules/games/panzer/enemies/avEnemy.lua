@@ -4,7 +4,7 @@ local Cron = require("modules/external/Cron")
 
 enemy = {}
 
-function enemy:new(game, x, y, scrollSpeed, health)
+function enemy:new(game, x, y, scrollSpeed, health, movementSpeed, damage)
 	local o = {}
 
     o.game = game
@@ -14,7 +14,7 @@ function enemy:new(game, x, y, scrollSpeed, health)
     o.y = y
     o.size = {x = 25, y = 45}
     o.scrollSpeed = scrollSpeed
-    o.speed = 5
+    o.speed = movementSpeed or 5
     o.health = health
 
     o.image = nil
@@ -31,6 +31,7 @@ function enemy:new(game, x, y, scrollSpeed, health)
     o.burstLength = 4
     o.currentBurst = 1
     o.recovery = false
+    o.damage = damage or 5
 
 	self.__index = self
     return setmetatable(o, self)
@@ -65,13 +66,15 @@ function enemy:spawn(screen)
         if not self.recovery then
             self.currentBurst = self.currentBurst + 1
 
-            local p = require("modules/games/panzer/projectile"):new(self.game, self.x, self.y + 38, 0, -120, 20, "player", self.atlasPath, "shmup_missile", {x = 3, y = 14}, true)
+            local p = require("modules/games/panzer/projectile"):new(self.game, self.x, self.y + 38, 0, -120, self.damage, "player", self.atlasPath, "shmup_missile", {x = 3, y = 14}, true)
             p:spawn(screen)
             table.insert(self.game.projectiles, p)
 
-            local p = require("modules/games/panzer/projectile"):new(self.game, self.x + 22, self.y + 38, 0, -120, 20, "player", self.atlasPath, "shmup_missile", {x = 3, y = 14}, true)
+            local p = require("modules/games/panzer/projectile"):new(self.game, self.x + 22, self.y + 38, 0, -120, self.damage, "player", self.atlasPath, "shmup_missile", {x = 3, y = 14}, true)
             p:spawn(screen)
             table.insert(self.game.projectiles, p)
+
+            utils.playSound("v_av_panzer_wea_missile_launcher_fire")
 
             if self.currentBurst == self.burstLength then
                 self.recovery = true
@@ -119,8 +122,9 @@ end
 
 function enemy:destroy()
     self:despawn()
+    utils.playSound("q101_sc_03_troy_03_fall_explosion")
 
-    local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
+    local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y + 20, self.size, 0.15)
     exp:spawn(self.screen)
 end
 

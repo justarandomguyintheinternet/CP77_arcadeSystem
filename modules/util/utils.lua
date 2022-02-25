@@ -270,10 +270,14 @@ function miscUtils.spendMoney(amount)
     Game.GetTransactionSystem():RemoveItem(Game.GetPlayer(), moneyId, amount)
 end
 
-function miscUtils.playSound(name)
-    local audioEvent = SoundPlayEvent.new ()
-    audioEvent.soundName = name
-    GetPlayer():QueueEvent(audioEvent)
+function miscUtils.playSound(name, mult)
+    local m = mult or 1
+
+    for i = 0, m do
+        local audioEvent = SoundPlayEvent.new ()
+        audioEvent.soundName = name
+        GetPlayer():QueueEvent(audioEvent)
+    end
 end
 
 return miscUtils

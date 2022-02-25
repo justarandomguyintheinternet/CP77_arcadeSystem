@@ -39,19 +39,20 @@ function projectile:update(dt)
     self.y = self.y - self.velY * dt
 
     if self.x > self.game.screenSize.x + 10 or self.x < -10 then
-        self:despawn()
+        self:despawn(true)
     elseif self.y > self.game.screenSize.y + 10 or self.y < -10 then
-        self:despawn()
+        self:despawn(true)
     end
 
     self.image.pos:SetMargin(self.x, self.y, 0, 0)
 end
 
-function projectile:despawn()
+function projectile:despawn(silent)
     self.image.image:SetVisible(false)
-    if self.isExplosive then
+    if not silent and self.isExplosive then
         local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.1)
         exp:spawn(self.screen)
+        utils.playSound("w_gun_npc_satara_fire_voice_01")
     end
     utils.removeItem(self.game.projectiles, self)
 end
