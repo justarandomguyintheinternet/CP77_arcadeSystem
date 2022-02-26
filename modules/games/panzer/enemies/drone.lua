@@ -61,6 +61,7 @@ function drone:spawn(screen)
     self.shootCron = Cron.Every(self.fireRate,  function()
         local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, 0, -100, self.damage, "player", self.atlasPath, "shmup_projectile", {x = 6, y = 6}, false)
         p:spawn(screen)
+        p.image.image:SetTintColor(0, 255, 255, 1)
         table.insert(self.game.projectiles, p)
 
         utils.playSound("w_gun_npc_toygun_fire_voice_01")
@@ -98,6 +99,8 @@ function drone:onDamage(damage)
         self.thruster.image:SetOpacity(0.1)
 
         Cron.After(0.1, function ()
+            if not self.image then return end
+
             self.image.image:SetOpacity(1)
             self.thruster.image:SetOpacity(1)
         end)
@@ -120,8 +123,13 @@ function drone:despawn(hard)
     Cron.Halt(self.shootCron)
 
     if hard then
-        self.image.image:SetVisible(false)
-        self.thruster.image:SetVisible(false)
+        self.image.pos:RemoveChild(self.image.image)
+        self.screen:RemoveChild(self.image.pos)
+        self.image = nil
+
+        self.thruster.pos:RemoveChild(self.thruster.image)
+        self.screen:RemoveChild(self.thruster.pos)
+        self.thruster = nil
     end
 
     self.game.enemies[utils.indexValue(self.game.enemies, self)] = nil

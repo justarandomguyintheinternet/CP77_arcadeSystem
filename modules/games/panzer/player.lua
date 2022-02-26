@@ -34,7 +34,6 @@ function player:spawn(screen)
 end
 
 function player:update(dt)
-    --print(self.game.input.analogForward, self.game.input.analogRight)
     if self.game.input.forward then
         self.y = self.y - (self.movementSpeed * dt) * self.game.input.analogForward
     end
@@ -106,7 +105,10 @@ function player:onDeath()
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y + 20, self.size, 0.2)
     exp:spawn(self.screen)
 
-    self.image.image:SetVisible(false)
+    self.image.pos:RemoveChild(self.image.image)
+    self.screen:RemoveChild(self.image.pos)
+    self.image = nil
+
     self.game:lost()
 end
 

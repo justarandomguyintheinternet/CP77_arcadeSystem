@@ -98,8 +98,9 @@ function game:showDefault() -- Show the default home screen
 	ink.rect(160, 310, 400, 400, HDRColor.new({ Red = 0, Green = 0.4, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 	ink.rect(255, 320, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 
-    ink.text("Panzer", 40, 0, 50, color.yellow):Reparent(area, -1)
-    ink.text("Game", 100, 50, 40, color.red):Reparent(area, -1)
+    ink.text("Panzer", 20, 0, 50, color.orange):Reparent(area, -1)
+    ink.text("Shooter", 40, 50, 40, color.yellow):Reparent(area, -1)
+	ink.text("XTREME", 150, 50, 40, color.red, nil, nil, 45):Reparent(area, -1)
 
     local buttons = ink.canvas(110, 110)
     buttons:Reparent(self.menuScreen, -1)
@@ -326,6 +327,7 @@ function game:switchToGame()
 	self.inMenu = false
 	self.inGame = true
 
+	self.score = 0
 	self:startEnemySpawning()
 end
 
@@ -390,7 +392,7 @@ function game:startEnemySpawning()
 		end
 	end
 
-	self.enemySpawning = Cron.Every(0.5, function()
+	self.enemySpawning = Cron.Every(0.4, function()
 		if #self.enemies > 8 then return end
 
 		if math.random() < (self.spawnChance / 100) + self.score / 100000 then

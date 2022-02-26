@@ -123,6 +123,8 @@ function av:onDamage(damage)
         self.thruster.image:SetOpacity(0.1)
 
         Cron.After(0.1, function ()
+            if not self.image then return end
+
             self.image.image:SetOpacity(1)
             self.thruster.image:SetOpacity(1)
         end)
@@ -145,8 +147,13 @@ function av:despawn(hard)
     Cron.Halt(self.shootCron)
 
     if hard then
-        self.image.image:SetVisible(false)
-        self.thruster.image:SetVisible(false)
+        self.image.pos:RemoveChild(self.image.image)
+        self.screen:RemoveChild(self.image.pos)
+        self.image = nil
+
+        self.thruster.pos:RemoveChild(self.thruster.image)
+        self.screen:RemoveChild(self.thruster.pos)
+        self.thruster = nil
     end
 
     self.game.enemies[utils.indexValue(self.game.enemies, self)] = nil

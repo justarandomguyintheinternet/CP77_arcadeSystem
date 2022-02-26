@@ -97,6 +97,8 @@ function mech:onDamage(damage)
         self.image.image:SetOpacity(0.6)
 
         Cron.After(0.1, function ()
+            if not self.image then return end
+
             self.image.image:SetOpacity(1)
         end)
     end
@@ -118,7 +120,9 @@ function mech:despawn(hard)
     Cron.Halt(self.shootCron)
 
     if hard then
-        self.image.image:SetVisible(false)
+        self.image.pos:RemoveChild(self.image.image)
+        self.screen:RemoveChild(self.image.pos)
+        self.image = nil
     end
 
     self.game.enemies[utils.indexValue(self.game.enemies, self)] = nil

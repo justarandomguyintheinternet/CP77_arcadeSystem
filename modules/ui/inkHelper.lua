@@ -7,11 +7,13 @@ ink = {}
 ---@param color HDRColor
 ---@param letterCase textLetterCase
 ---@param fontStlye string
+---@param rotation number
 ---@return inkText
-function ink.text(text, x, y, size, color, letterCase, fontStlye) -- Create a text
+function ink.text(text, x, y, size, color, letterCase, fontStlye, rotation) -- Create a text
     local c = color or HDRColor.new({ Red = 1, Green = 1, Blue = 1, Alpha = 1.0 })
     local case = letterCase or textLetterCase.OriginalCase
     local style = fontStyle or "Medium"
+    local r = rotation or 0
 
     local widget = inkText.new()
     widget:SetName(tostring(text))
@@ -24,6 +26,7 @@ function ink.text(text, x, y, size, color, letterCase, fontStlye) -- Create a te
     widget:SetMargin(inkMargin.new({ left = x, top = y, right = 0.0, bottom = 0.0 }))
     widget:SetText(text)
     widget:SetVisible(true)
+    widget:SetRotation(r)
 
     return widget
 end

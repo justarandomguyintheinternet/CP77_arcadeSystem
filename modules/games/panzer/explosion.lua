@@ -17,12 +17,15 @@ function explosion:new(game, x, y, size, targetSize, animationSpeed)
 
     o.targetSize = targetSize
     o.animationSpeed = animationSpeed or 0.2
+    o.explosion = nil
 
 	self.__index = self
    	return setmetatable(o, self)
 end
 
 function explosion:spawn(screen)
+    self.screen = screen
+
     table.insert(self.game.explosions, self)
 
     if self.targetSize then
@@ -38,7 +41,10 @@ function explosion:spawn(screen)
             local part = tostring("shmup-blast" .. timer.tick)
             self.explosion.image:SetTexturePart(part)
         else
-            self.explosion.image:SetVisible(false)
+            self.explosion.pos:RemoveChild(self.explosion.image)
+            self.screen:RemoveChild(self.explosion.pos)
+            self.explosion = nil
+
             utils.removeItem(self.game.explosions, self)
             timer:Halt()
         end

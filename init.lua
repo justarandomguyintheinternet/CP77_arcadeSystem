@@ -21,7 +21,8 @@ as = {
     settings = {},
     observers = require("modules/util/observers"),
 	Cron = require("modules/external/Cron"),
-    GameUI = require("modules/external/GameUI")
+    GameUI = require("modules/external/GameUI"),
+    utils = require("modules/util/utils")
 }
 
 function as:new()
@@ -43,7 +44,7 @@ function as:new()
         self.GameUI.OnSessionEnd(function()
             self.runtimeData.inGame = false
             self.logic.machines = {}
-            utils.hideCustomHints()
+            self.utils.hideCustomHints()
         end)
 
         self.GameUI.OnPhotoModeOpen(function()
@@ -61,7 +62,7 @@ function as:new()
         if self.logic.currentWorkspot then
             self.logic.currentWorkspot:forceExit()
         end
-        utils.hideCustomHints()
+        self.utils.hideCustomHints()
     end)
 
     registerForEvent("onUpdate", function (deltaTime)
@@ -69,10 +70,6 @@ function as:new()
 		    self.Cron.Update(deltaTime)
             self.logic:run(deltaTime)
         end
-    end)
-
-    registerForEvent("onDraw", function()
-
     end)
 
     registerForEvent("onOverlayOpen", function()
