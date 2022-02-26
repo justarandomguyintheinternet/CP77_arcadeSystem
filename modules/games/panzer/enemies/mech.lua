@@ -2,9 +2,9 @@ local ink = require("modules/ui/inkHelper")
 local utils = require("modules/util/utils")
 local Cron = require("modules/external/Cron")
 
-enemy = {}
+mech = {}
 
-function enemy:new(game, x, y, scrollSpeed, health, movementSpeed, damage)
+function mech:new(game, x, y, scrollSpeed, health, movementSpeed, damage, hpPayback)
 	local o = {}
 
     o.game = game
@@ -34,14 +34,17 @@ function enemy:new(game, x, y, scrollSpeed, health, movementSpeed, damage)
 
     o.targetX = 0
 
+    o.shootCron = nil
     o.fireRate = 0.4
     o.damage = damage or 5
+
+    o.hpPayback = hpPayback or o.health / 5
 
 	self.__index = self
     return setmetatable(o, self)
 end
 
-function enemy:spawn(screen)
+function mech:spawn(screen)
     self.screen = screen
 
     self.image = ink.image(self.x, self.y, self.size.x, self.size.y, self.atlasPath, self.atlasParts[self.animeStage], 0, inkBrushMirrorType.Vertical)
@@ -60,7 +63,7 @@ function enemy:spawn(screen)
         local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, 0, -120, self.damage, "player", self.atlasPath, "shmup-title_flare2", {x = 6, y = 6}, false)
         p:spawn(screen)
         table.insert(self.game.projectiles, p)
-        utils.playSound("w_gun_npc_toygun_fire_voice_01")
+        utils.playSound("dev_drone_griffin_default_wea_rifle_fire_auto_voice_02_stop")
     end)
 
     self.targetX = math.random(0, self.game.screenSize.x)
@@ -68,7 +71,7 @@ function enemy:spawn(screen)
     table.insert(self.game.enemies, self)
 end
 
-function enemy:update(dt)
+function mech:update(dt)
     self.y = self.y + self.scrollSpeed * dt
 
     if math.abs(self.targetX - self.x) > 14 then
@@ -78,9 +81,11 @@ function enemy:update(dt)
     end
 
     self.image.pos:SetMargin(self.x, self.y, 0, 0)
+
+    if self.y > self.game.screenSize.y + self.size.y then self:despawn() end
 end
 
-function enemy:onDamage(damage)
+function mech:onDamage(damage)
     self.health = self.health - damage
 
     if self.health < 0 then
@@ -94,19 +99,25 @@ function enemy:onDamage(damage)
     end
 end
 
-function enemy:destroy()
-    self:despawn()
+function mech:destroy()
+    self:despawn(true)
     utils.playSound("dev_fire_extinguisher_explode", 2)
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)
+
+    self.game.player.health = self.game.player.health + self.hpPayback
 end
 
-function enemy:despawn()
+function mech:despawn(hard)
     Cron.Halt(self.animeCron)
     Cron.Halt(self.shootCron)
-    self.image.image:SetVisible(false)
-    utils.removeItem(self.game.enemies, self)
+
+    if hard then
+        self.image.image:SetVisible(false)
+    end
+
+    self.game.enemies[utils.indexValue(self.game.enemies, self)] = nil
 end
 
-return enemy
+return mech

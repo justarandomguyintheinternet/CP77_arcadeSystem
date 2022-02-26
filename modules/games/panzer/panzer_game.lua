@@ -26,6 +26,7 @@ function game:new(arcadeSys, arcade)
 
 	o.player = nil
 	o.input = {forward = false, backwards = false, right = false, left = false, shoot = false}
+	o.keys = {}
 	o.animeCron = nil
 
 	o.score = 0
@@ -118,6 +119,13 @@ function game:handleInput(action) -- Passed forward from onAction
 	local actionName = Game.NameToString(action:GetName(action))
 	local actionType = action:GetType(action).value
 
+	if utils.has_value(self.keys, actionName) then return end
+
+	table.insert(self.keys, actionName)
+	Cron.NextTick(function ()
+		utils.removeItem(self.keys, actionName)
+	end)
+
 	if actionName == 'UI_Apply' then
 		if actionType == 'BUTTON_PRESSED' then
 			self:handleMenuInput("interact")
@@ -137,6 +145,9 @@ function game:handleInput(action) -- Passed forward from onAction
 	elseif actionName == 'Jump' then
 		if actionType == 'BUTTON_PRESSED' then
 			self.input.shoot = true
+			if self.inGame and self.gameOver then
+				self:goBack()
+			end
 		elseif actionType == 'BUTTON_RELEASED' then
 			self.input.shoot = false
 		end
@@ -205,6 +216,7 @@ function game:goBack()
 		self:switchToMenu()
 	elseif self.inGame then
 		self:switchToMenu()
+		self.enemies = {}
 	end
 end
 
@@ -219,14 +231,7 @@ function game:switchToMenu()
 		self.gameOverText:SetVisible(false)
 		self.hsText:SetVisible(false)
 		self.continueText:SetVisible(false)
-
-		for _, e in pairs(self.enemies) do
-			e:despawn()
-		end
-
-		for _, p in pairs(self.projectiles) do
-			p:despawn()
-		end
+		self:despawnAllObjects()
 
 		self.gameScreen = nil
 	end
@@ -234,6 +239,16 @@ function game:switchToMenu()
 	self.inMenu = true
 	self.inBoard = false
 	self.inGame = false
+end
+
+function game:despawnAllObjects()
+	for _, e in pairs(self.enemies) do
+		e:despawn(false)
+	end
+
+	for _, p in pairs(self.projectiles) do
+		p:despawn()
+	end
 end
 
 function game:switchToGame()
@@ -383,6 +398,8 @@ function game:renderTubes(dt) -- Draw and move the tubes
 end
 
 function game:lost()
+	self:despawnAllObjects()
+
 	self.gameOver = true
 	self.gameOverText:SetVisible(true)
 

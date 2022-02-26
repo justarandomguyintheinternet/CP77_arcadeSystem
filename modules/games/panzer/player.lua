@@ -53,6 +53,10 @@ function player:update(dt)
     if self.game.input.shoot then
         self:shoot()
     end
+
+    if self.health == 0 then
+        self:onDeath()
+    end
 end
 
 function player:shoot()
@@ -84,7 +88,7 @@ end
 function player:onDamage(damage)
     utils.playSound("w_feedback_player_damage", 5)
 
-    self.health = self.health - damage
+    self.health = math.max(0, self.health - damage)
 
     self.image.image:SetOpacity(0.6)
 
@@ -95,6 +99,12 @@ end
 
 function player:onDeath()
     utils.playSound("v_panzer_dst_fx_explosion")
+
+    local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y + 20, self.size, 0.2)
+    exp:spawn(self.screen)
+
+    self.image.image:SetVisible(false)
+    self.game:lost()
 end
 
 return player

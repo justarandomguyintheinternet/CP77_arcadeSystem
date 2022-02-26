@@ -2,9 +2,9 @@ local ink = require("modules/ui/inkHelper")
 local utils = require("modules/util/utils")
 local Cron = require("modules/external/Cron")
 
-enemy = {}
+av = {}
 
-function enemy:new(game, x, y, scrollSpeed, health, movementSpeed, damage)
+function av:new(game, x, y, scrollSpeed, health, movementSpeed, damage, hpPayback)
 	local o = {}
 
     o.game = game
@@ -33,11 +33,13 @@ function enemy:new(game, x, y, scrollSpeed, health, movementSpeed, damage)
     o.recovery = false
     o.damage = damage or 5
 
+    o.hpPayback = hpPayback or o.health / 5
+
 	self.__index = self
     return setmetatable(o, self)
 end
 
-function enemy:spawn(screen)
+function av:spawn(screen)
     self.screen = screen
 
     self.image = ink.image(self.x, self.y, self.size.x, self.size.y, self.atlasPath, self.atlasPart, 0, inkBrushMirrorType.Vertical)
@@ -89,7 +91,7 @@ function enemy:spawn(screen)
     table.insert(self.game.enemies, self)
 end
 
-function enemy:update(dt)
+function av:update(dt)
     self.y = self.y + self.scrollSpeed * dt
     if math.abs(self.targetX - self.x) > 3 then
         if self.x > self.targetX then
@@ -102,9 +104,11 @@ function enemy:update(dt)
     end
 
     self.image.pos:SetMargin(self.x, self.y, 0, 0)
+
+    if self.y > self.game.screenSize.y + self.size.y then self:despawn() end
 end
 
-function enemy:onDamage(damage)
+function av:onDamage(damage)
     self.health = self.health - damage
 
     if self.health < 0 then
@@ -120,20 +124,26 @@ function enemy:onDamage(damage)
     end
 end
 
-function enemy:destroy()
-    self:despawn()
+function av:destroy()
+    self:despawn(true)
     utils.playSound("q101_sc_03_troy_03_fall_explosion")
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y + 20, self.size, 0.15)
     exp:spawn(self.screen)
+
+    self.game.player.health = self.game.player.health + self.hpPayback
 end
 
-function enemy:despawn()
+function av:despawn(hard)
     Cron.Halt(self.thusterCron)
     Cron.Halt(self.shootCron)
-    self.image.image:SetVisible(false)
-    self.thruster.image:SetVisible(false)
-    utils.removeItem(self.game.enemies, self)
+
+    if hard then
+        self.image.image:SetVisible(false)
+        self.thruster.image:SetVisible(false)
+    end
+
+    self.game.enemies[utils.indexValue(self.game.enemies, self)] = nil
 end
 
-return enemy
+return av

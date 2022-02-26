@@ -2,9 +2,9 @@ local ink = require("modules/ui/inkHelper")
 local utils = require("modules/util/utils")
 local Cron = require("modules/external/Cron")
 
-enemy = {}
+station = {}
 
-function enemy:new(game, x, y, health, movementSpeed, damage)
+function station:new(game, x, y, health, movementSpeed, damage, hpPayback)
 	local o = {}
 
     o.game = game
@@ -28,17 +28,19 @@ function enemy:new(game, x, y, health, movementSpeed, damage)
     o.bulletSize = {x = 5, y = 5}
     o.damage = damage or 5
 
+    o.hpPayback = hpPayback or o.health / 5
+
 	self.__index = self
     return setmetatable(o, self)
 end
 
-function enemy:spawn(screen)
+function station:spawn(screen)
     self.screen = screen
 
     self.image = ink.image(self.x, self.y, self.size.x, self.size.y, self.atlasPath, self.atlasPart, 0, inkBrushMirrorType.Both)
     self.image.pos:Reparent(screen, -1)
 
-    self.shootCron = Cron.Every(0.2,  function()
+    self.shootCron = Cron.Every(0.2, function()
         if not self.recovery then
             self.currentBurst = self.currentBurst + 1
 
@@ -75,13 +77,15 @@ function enemy:spawn(screen)
     table.insert(self.game.enemies, self)
 end
 
-function enemy:update(dt)
+function station:update(dt)
     self.y = self.y + self.game.scrollSpeed * (dt / 0.016)
 
     self.image.pos:SetMargin(self.x, self.y, 0, 0)
+
+    if self.y > self.game.screenSize.y + self.size.y then self:despawn() end
 end
 
-function enemy:onDamage(damage)
+function station:onDamage(damage)
     self.health = self.health - damage
 
     if self.health < 0 then
@@ -95,18 +99,25 @@ function enemy:onDamage(damage)
     end
 end
 
-function enemy:destroy()
-    self:despawn()
+function station:destroy()
     utils.playSound("q112_billboard_explosion", 2)
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)
+
+    self.game.player.health = self.game.player.health + self.hpPayback
+
+    self:despawn(true)
 end
 
-function enemy:despawn()
+function station:despawn(hard)
     Cron.Halt(self.shootCron)
-    self.image.image:SetVisible(false)
-    utils.removeItem(self.game.enemies, self)
+
+    if hard then
+        self.image.image:SetVisible(false)
+    end
+
+    self.game.enemies[utils.indexValue(self.game.enemies, self)] = nil
 end
 
-return enemy
+return station

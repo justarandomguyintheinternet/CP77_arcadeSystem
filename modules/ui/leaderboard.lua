@@ -70,6 +70,7 @@ function board:new(nEntries, randFunc)
     o.nEntries = nEntries
     o.randomFunc = randFunc
 
+    o.bg = nil
     o.canvas = nil
 
     o.scores = {}
@@ -84,6 +85,10 @@ function board:spawn(playerScore)
 	self:sortLeaderboard()
 
     self.canvas = ink.canvas(0, 0)
+
+    self.bg = ink.rect(-200, -200, 500, 500, color.black)
+    self.bg:Reparent(self.canvas, -1)
+
     ink.text("Leaderboard:", -35, -22, 35, color.gold):Reparent(self.canvas, -1)
 
     for key, entry in pairs(self.scores) do
