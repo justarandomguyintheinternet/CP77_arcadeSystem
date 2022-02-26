@@ -72,7 +72,10 @@ function drone:spawn(screen)
 end
 
 function drone:update(dt)
-    self.y = self.y + self.scrollSpeed * dt
+    local yAcc = 1
+    if self.y < 15 then yAcc = 5 end
+
+    self.y = self.y + (self.scrollSpeed * dt) * yAcc
 
     if math.abs(self.targetX - self.x) > 15 then
         self.x = self.x + (self.targetX - self.x) / self.speed
@@ -109,6 +112,7 @@ function drone:destroy()
     exp:spawn(self.screen)
 
     self.game.player.health = self.game.player.health + self.hpPayback
+    self.game.score = self.game.score + self.hpPayback * 10
 end
 
 function drone:despawn(hard)

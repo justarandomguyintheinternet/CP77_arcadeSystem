@@ -118,6 +118,12 @@ function logic:onInteract() -- Called from onAction observer
 		_, self.currentArcade = self:getArcadeByObject(targetData.target)
 		self.currentWorkspot = require("modules/workspot"):new(self.as)
 		self.currentWorkspot:enter(targetData.target)
+
+		if GetMod("nanoDrone") then
+			utils.hideCustomHints("drone")
+		end
+
+		self.currentArcade.game:showHints("menu")
 	end
 end
 
@@ -129,6 +135,10 @@ end
 
 function logic:onExitedWorkspot() -- Gets called when workspot has finished exit anim
 	self.currentWorkspot = nil
+
+	if GetMod("nanoDrone") then
+		utils.showInputHint("QuickMelee", "Activate NanoDrone", 1, true, "drone")
+	end
 end
 
 return logic

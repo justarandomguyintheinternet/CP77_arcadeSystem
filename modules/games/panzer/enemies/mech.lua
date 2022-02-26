@@ -72,7 +72,10 @@ function mech:spawn(screen)
 end
 
 function mech:update(dt)
-    self.y = self.y + self.scrollSpeed * dt
+    local yAcc = 1
+    if self.y < 15 then yAcc = 5 end
+
+    self.y = self.y + (self.scrollSpeed * dt) * yAcc
 
     if math.abs(self.targetX - self.x) > 14 then
         self.x = self.x + (self.targetX - self.x) / self.speed
@@ -107,6 +110,7 @@ function mech:destroy()
     exp:spawn(self.screen)
 
     self.game.player.health = self.game.player.health + self.hpPayback
+    self.game.score = self.game.score + self.hpPayback * 10
 end
 
 function mech:despawn(hard)

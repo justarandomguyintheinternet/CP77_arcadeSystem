@@ -48,6 +48,8 @@ function av:spawn(screen)
     self.thruster = ink.image(0, 6, self.size.x, 38, self.atlasPath, "shmup-av-propulsion", 0, inkBrushMirrorType.Vertical)
     self.thruster.pos:Reparent(self.image.pos)
 
+    self.targetX = math.random(0, self.game.screenSize.x)
+
     self.thusterCron = Cron.Every(0.15, function()
         local stage = inkBrushMirrorType.NoMirror
 
@@ -92,7 +94,10 @@ function av:spawn(screen)
 end
 
 function av:update(dt)
-    self.y = self.y + self.scrollSpeed * dt
+    local yAcc = 1
+    if self.y < 15 then yAcc = 5 end
+
+    self.y = self.y + (self.scrollSpeed * dt) * yAcc
     if math.abs(self.targetX - self.x) > 3 then
         if self.x > self.targetX then
             self.x = self.x - dt * self.speed
@@ -132,6 +137,7 @@ function av:destroy()
     exp:spawn(self.screen)
 
     self.game.player.health = self.game.player.health + self.hpPayback
+    self.game.score = self.game.score + self.hpPayback * 10
 end
 
 function av:despawn(hard)

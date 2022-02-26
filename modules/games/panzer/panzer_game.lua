@@ -51,6 +51,15 @@ function game:new(arcadeSys, arcade)
 	o.enemies = {}
 	o.explosions = {}
 
+	o.enemySpawning = nil
+	o.chances = {
+		["av"] = 35,
+		["mech"] = 70,
+		["drone"] = 100,
+		["station"] = 40
+	}
+	o.spawnChance = 15
+
 	self.__index = self
    	return setmetatable(o, self)
 end
@@ -154,26 +163,70 @@ function game:handleInput(action) -- Passed forward from onAction
 	elseif actionName == 'Forward' then
 		if actionType == 'BUTTON_PRESSED' then
 			self.input.forward = true
+			self.input.analogForward = 1
 		elseif actionType == 'BUTTON_RELEASED' then
 			self.input.forward = false
+			self.input.analogForward = 0
 		end
 	elseif actionName == 'Back' then
 		if actionType == 'BUTTON_PRESSED' then
 			self.input.backwards = true
+			self.input.analogForward = -1
 		elseif actionType == 'BUTTON_RELEASED' then
 			self.input.backwards = false
+			self.input.analogForward = 0
 		end
 	elseif actionName == 'Left' then
 		if actionType == 'BUTTON_PRESSED' then
 			self.input.left = true
+			self.input.analogRight = -1
 		elseif actionType == 'BUTTON_RELEASED' then
 			self.input.left = false
+			self.input.analogRight = 0
 		end
 	elseif actionName == 'Right' then
 		if actionType == 'BUTTON_PRESSED' then
 			self.input.right = true
+			self.input.analogRight = 1
 		elseif actionType == 'BUTTON_RELEASED' then
 			self.input.right = false
+			self.input.analogRight = 0
+		end
+	end
+
+	if actionName == "MoveX" then -- Controller movement
+		local x = action:GetValue(action)
+		if x < 0 then
+			self.input.left = true
+			self.input.right = false
+			self.input.analogRight = -x
+		else
+			self.input.right = true
+			self.input.left = false
+			self.input.analogRight = x
+		end
+		if x == 0 then
+			self.input.right = false
+			self.input.left = false
+			self.input.analogRight = 0
+		end
+	end
+
+	if actionName == "MoveY" then
+		local x = action:GetValue(action)
+		if x < 0 then
+			self.input.backwards = true
+			self.input.forward = false
+			self.input.analogForward = -x
+		else
+			self.input.backwards = false
+			self.input.forward = true
+			self.input.analogForward = x
+		end
+		if x == 0 then
+			self.input.backwards = false
+			self.input.forward = false
+			self.input.analogForward = 0
 		end
 	end
 end
@@ -194,18 +247,21 @@ function game:handleMenuInput(key)
 		elseif self.selectedItem == 1 then
 			self:switchToGame()
 		end
+		utils.playSound("ui_loot_additional")
 	elseif key == "up" then
 		self.selectedItem = self.selectedItem - 1
 		if self.selectedItem < 1 then
 			self.selectedItem = 3
 		end
 		self:selectMenuItem()
+		utils.playSound("ui_menu_onpress")
 	elseif key == "down" then
 		self.selectedItem = self.selectedItem + 1
 		if self.selectedItem > 3 then
 			self.selectedItem = 1
 		end
 		self:selectMenuItem()
+		utils.playSound("ui_menu_onpress")
 	end
 end
 
@@ -221,6 +277,9 @@ function game:goBack()
 end
 
 function game:switchToMenu()
+	utils.hideCustomHints()
+	self:showHints("menu")
+
 	self.menuScreen:SetVisible(true)
 	if self.gameScreen then self.gameScreen:SetVisible(false) end
 	if self.boardScreen then self.boardScreen:SetVisible(false) end
@@ -234,6 +293,8 @@ function game:switchToMenu()
 		self:despawnAllObjects()
 
 		self.gameScreen = nil
+
+		Cron.Halt(self.enemySpawning)
 	end
 
 	self.inMenu = true
@@ -252,6 +313,9 @@ function game:despawnAllObjects()
 end
 
 function game:switchToGame()
+	utils.hideCustomHints()
+	self:showHints("game")
+
 	utils.spendMoney(2)
 	if not self.gameScreen then
 		self:initGame()
@@ -261,9 +325,14 @@ function game:switchToGame()
 
 	self.inMenu = false
 	self.inGame = true
+
+	self:startEnemySpawning()
 end
 
 function game:switchToBoard() -- Switch to leaderboard
+	utils.hideCustomHints()
+	self:showHints("board")
+
 	if not self.boardScreen then
 		self:initBoard()
 	end
@@ -310,22 +379,42 @@ function game:initGame()
 	-- Player health text
 	self.healthText = ink.text(tostring("HP: " .. self.player.health), 240, 10, 20)
 	self.healthText:Reparent(self.gameScreen, -1)
-
-	local e = require("modules/games/panzer/enemies/mech"):new(self, 25, 0, 6, 100)
-	e:spawn(self.gameScreen)
-
-	local e = require("modules/games/panzer/enemies/drone"):new(self, 50, 0, 5, 100)
-	e:spawn(self.gameScreen)
-
-	local e = require("modules/games/panzer/enemies/avEnemy"):new(self, 80, 0, 4, 100)
-	e:spawn(self.gameScreen)
-
-	local e = require("modules/games/panzer/enemies/stationary"):new(self, 150, 0, 150)
-	e:spawn(self.gameScreen)
 end
 
 function game:startEnemySpawning()
+	self.bag = {}
 
+	for k, v in pairs(self.chances) do
+		for _ = 0, v do
+			table.insert(self.bag, k)
+		end
+	end
+
+	self.enemySpawning = Cron.Every(0.5, function()
+		if #self.enemies > 8 then return end
+
+		if math.random() < (self.spawnChance / 100) + self.score / 100000 then
+			local pick = self.bag[math.random(#self.bag)]
+
+			if pick == "av" then
+				local e = require("modules/games/panzer/enemies/avEnemy"):new(self, math.random(0, self.screenSize.x), 0, 4, 100)
+				e.y = -e.size.y
+				e:spawn(self.gameScreen)
+			elseif pick == "drone" then
+				local e = require("modules/games/panzer/enemies/drone"):new(self, math.random(0, self.screenSize.x), 0, 5, 100)
+				e.y = -e.size.y
+				e:spawn(self.gameScreen)
+			elseif pick == "mech" then
+				local e = require("modules/games/panzer/enemies/mech"):new(self, math.random(0, self.screenSize.x), 0, 6, 100)
+				e.y = -e.size.y
+				e:spawn(self.gameScreen)
+			elseif pick == "station" then
+				local e = require("modules/games/panzer/enemies/stationary"):new(self, math.random(0, self.screenSize.x), 0, 150)
+				e.y = -e.size.y
+				e:spawn(self.gameScreen)
+			end
+		end
+	end)
 end
 
 function game:initBoard()
@@ -334,7 +423,7 @@ function game:initBoard()
 	self.boardScreen:SetVisible(false)
 
 	self.leaderboard = require("modules/ui/leaderboard"):new(10, function ()
-		return math.random(500, 500000)
+		return math.random(15, 150) * 50
 	end)
 	self.leaderboard:spawn(self.highscore):Reparent(self.boardScreen, -1)
 	self.leaderboard.canvas:SetMargin(110, 28, 0, 0)
@@ -399,6 +488,7 @@ end
 
 function game:lost()
 	self:despawnAllObjects()
+	Cron.Halt(self.enemySpawning)
 
 	self.gameOver = true
 	self.gameOverText:SetVisible(true)
@@ -419,6 +509,7 @@ end
 
 function game:renderHealth()
 	self.healthText:SetText(tostring("HP: " .. self.player.health))
+	self.scoreInk:SetText(tostring("Score: " .. self.score))
 end
 
 function game:updateProjectiles(dt)
@@ -462,9 +553,24 @@ function game:saveHighscore(score)
 	Game.GetQuestsSystem():SetFactStr('arcade_panzer', score)
 end
 
+function game:showHints(stage)
+	if stage == "menu" then
+		utils.showInputHint("ChoiceScrollDown", "Scroll up")
+		utils.showInputHint("ChoiceScrollUp", "Scroll down")
+		utils.showInputHint("UI_Apply", "Select")
+		utils.showInputHint("QuickMelee", "Back")
+	elseif stage == "board" then
+		utils.showInputHint("QuickMelee", "Back")
+	elseif stage == "game" then
+		utils.showInputHint("Jump", "Shoot")
+		utils.showInputHint("QuickMelee", "Back")
+	end
+end
+
 function game:stop() -- Gets called when leaving workspot
 	self:switchToMenu()
 	self.gameScreen = nil
+	utils.hideCustomHints()
 end
 
 return game

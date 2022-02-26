@@ -12,12 +12,14 @@ function player:new(x, y, game)
     o.x = x
     o.y = y
     o.movementSpeed = 120
+    o.originalSpeed = o.movementSpeed
 
     o.size = {x = 38, y = 60}
     o.image = nil
     o.animeFrame = 1
 
-    o.health = 100
+    o.health = 10000
+    o.damage = 25
     o.fireRate = 0.15
     o.shootDelay = nil
 
@@ -32,17 +34,18 @@ function player:spawn(screen)
 end
 
 function player:update(dt)
+    --print(self.game.input.analogForward, self.game.input.analogRight)
     if self.game.input.forward then
-        self.y = self.y - self.movementSpeed * dt
+        self.y = self.y - (self.movementSpeed * dt) * self.game.input.analogForward
     end
     if self.game.input.backwards then
-        self.y = self.y + self.movementSpeed * dt
+        self.y = self.y + (self.movementSpeed * dt) * self.game.input.analogForward
     end
     if self.game.input.right then
-        self.x = self.x + self.movementSpeed * dt
+        self.x = self.x + (self.movementSpeed * dt) * self.game.input.analogRight
     end
     if self.game.input.left then
-        self.x = self.x - self.movementSpeed * dt
+        self.x = self.x - (self.movementSpeed * dt) * self.game.input.analogRight
     end
 
     self.x = math.min(self.game.screenSize.x - self.size.x / 2, math.max(0 - self.size.x / 2, self.x))
@@ -66,7 +69,7 @@ function player:shoot()
     p.x = self.x + (self.size.x / 2) - 4
     p.y = self.y
     p.velY = 100
-    p.damage = 25
+    p.damage = self.damage
     p.targetTag = "enemy"
     p.atlasPath = 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas'
     p.atlasPart = "shmup_projectile"

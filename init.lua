@@ -26,6 +26,8 @@ as = {
 
 function as:new()
     registerForEvent("onInit", function()
+        CName.add("arcade")
+
         self.logic = require("modules/logic"):new(self)
         self.observers.startInputObserver(self)
         self.logic:startCron()
@@ -41,6 +43,7 @@ function as:new()
         self.GameUI.OnSessionEnd(function()
             self.runtimeData.inGame = false
             self.logic.machines = {}
+            utils.hideCustomHints()
         end)
 
         self.GameUI.OnPhotoModeOpen(function()
@@ -58,6 +61,7 @@ function as:new()
         if self.logic.currentWorkspot then
             self.logic.currentWorkspot:forceExit()
         end
+        utils.hideCustomHints()
     end)
 
     registerForEvent("onUpdate", function (deltaTime)

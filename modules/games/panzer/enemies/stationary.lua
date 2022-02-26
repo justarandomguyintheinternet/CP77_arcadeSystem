@@ -100,14 +100,14 @@ function station:onDamage(damage)
 end
 
 function station:destroy()
+    self:despawn(true)
     utils.playSound("q112_billboard_explosion", 2)
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)
 
     self.game.player.health = self.game.player.health + self.hpPayback
-
-    self:despawn(true)
+    self.game.score = self.game.score + self.hpPayback * 10
 end
 
 function station:despawn(hard)

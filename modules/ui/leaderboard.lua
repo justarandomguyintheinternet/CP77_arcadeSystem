@@ -9,6 +9,7 @@ local names = {
     "Scissors",
     "Spicy.dll",
     "Gorefiend",
+    "Goreviend",
     "Neurolinked",
     "rfuzzo",
     "psiberx",
@@ -59,7 +60,8 @@ local names = {
     "Wakako",
     "ChantingMulan",
     "tylerMcVicker",
-    "pawelSusko"
+    "pawelSusko",
+    "fercyful"
 }
 
 board = {}

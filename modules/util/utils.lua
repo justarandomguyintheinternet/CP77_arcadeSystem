@@ -108,45 +108,6 @@ function miscUtils.distanceVector(from, to)
     return math.sqrt((to.x - from.x)^2 + (to.y - from.y)^2 + (to.z - from.z)^2)
 end
 
-function miscUtils.calcDeltaEuler(eul1, eul2)
-    local delta = EulerAngles.new(0, 0, 0)
-
-    local deltaRoll = eul1.roll - eul2.roll
-    local altDeltaRoll = (180 - math.abs(eul1.roll)) + (180 - math.abs(eul2.roll))
-    if eul1.roll > eul2.roll then
-        altDeltaRoll = - altDeltaRoll
-    end
-    if math.abs(deltaRoll) < math.abs(altDeltaRoll) then
-        delta.roll = deltaRoll
-    else
-        delta.roll = altDeltaRoll
-    end
-
-    local deltaPitch = eul1.pitch - eul2.pitch
-    local altDeltaPitch = (180 - math.abs(eul1.pitch)) + (180 - math.abs(eul2.pitch))
-    if eul1.pitch > eul2.pitch then
-        altDeltaPitch = - altDeltaPitch
-    end
-    if math.abs(deltaPitch) < math.abs(altDeltaPitch) then
-        delta.pitch = deltaPitch
-    else
-        delta.pitch = altDeltaPitch
-    end
-
-    local deltaYaw = eul1.yaw - eul2.yaw
-    local altDeltaYaw = (180 - math.abs(eul1.yaw)) + (180 - math.abs(eul2.yaw))
-    if eul1.yaw > eul2.yaw then
-        altDeltaYaw = - altDeltaYaw
-    end
-    if math.abs(deltaYaw) < math.abs(altDeltaYaw) then
-        delta.yaw = deltaYaw
-    else
-        delta.yaw = altDeltaYaw
-    end
-
-    return delta
-end
-
 -- All this code has been created by psiberx
 function miscUtils.createInteractionChoice(action, title)
     local choiceData =  InteractionChoiceData.new()
@@ -188,12 +149,12 @@ function miscUtils.createInteractionHub(titel, action, active)
 end
 -- ^^^^ All this code has been created by psiberx ^^^^
 
-function miscUtils.showInputHint(key, text, prio, holdAnimation)
+function miscUtils.showInputHint(key, text, prio, holdAnimation, source)
     local hold = holdAnimation or false
     local evt = UpdateInputHintEvent.new()
     local data = InputHintData.new()
     data.action = key
-    data.source = "turret"
+    data.source = source or "arcade"
     data.localizedLabel = text
     data.enableHoldAnimation = hold
     data.sortingPriority  = prio or 1
@@ -204,9 +165,9 @@ function miscUtils.showInputHint(key, text, prio, holdAnimation)
     Game.GetUISystem():QueueEvent(evt)
 end
 
-function miscUtils.hideCustomHints()
+function miscUtils.hideCustomHints(source)
     local evt = DeleteInputHintBySourceEvent.new()
-    evt.source = "turret"
+    evt.source = source or "arcade"
     evt.targetHintContainer = "GameplayInputHelper"
     Game.GetUISystem():QueueEvent(evt)
 end
