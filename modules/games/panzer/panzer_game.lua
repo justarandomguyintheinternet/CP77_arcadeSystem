@@ -15,6 +15,7 @@ function game:new(arcadeSys, arcade)
 	o.inMenu = true
 	o.inBoard = false
 	o.inGame = false
+	o.initialized = false
 
 	o.screen = nil
 
@@ -59,6 +60,9 @@ function game:new(arcadeSys, arcade)
 		["station"] = 40
 	}
 	o.spawnChance = 15
+
+	o.menuMusic = "mus_sq029_vr_game_01_loop_START"
+	o.gameMusic = "mus_mq022_maglev_01_START"
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -114,7 +118,7 @@ function game:showDefault() -- Show the default home screen
 	self.titelE2 = ink.image(45, 80, 50, 60, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup_bot01", 0, inkBrushMirrorType.Vertical)
 	self.titelE2.pos:Reparent(self.menuScreen, -1)
 
-	self.titelFluff = ink.text("(c) kWStudios Co. Ltd. 2067\n All rights reserved.", 15, self.screenSize.y - 30, 8)
+	self.titelFluff = ink.text("[c] kWStudios Co. Ltd. 2067\n All rights reserved.", 15, self.screenSize.y - 30, 8)
 	self.titelFluff:Reparent(self.menuScreen, -1)
 
     local area = ink.canvas(45, 10)
@@ -137,7 +141,15 @@ function game:showDefault() -- Show the default home screen
 	self:loadHighscore()
 end
 
+function game:onEnteredWorkspot() -- Gets called once after entering the workspot
+	utils.playSound(self.menuMusic)
+end
+
 function game:update(dt) -- Runs every frame once fully in workspot
+	if not self.initialized then
+		self.initialized = true
+		self:onEnteredWorkspot()
+	end
 	if self.inGame and not self.gameOver then
 		self.player:update(dt)
 		self:updateProjectiles(dt)
@@ -182,6 +194,14 @@ function game:handleInput(action) -- Passed forward from onAction
 			end
 		elseif actionType == 'BUTTON_RELEASED' then
 			self.input.shoot = false
+		end
+	elseif actionName == 'Reload' then
+		if not self.inGame then return end
+
+		if actionType == 'BUTTON_PRESSED' then
+			self.input.chargeShoot = true
+		elseif actionType == 'BUTTON_RELEASED' then
+			self.input.chargeShoot = false
 		end
 	elseif actionName == 'Forward' then
 		if actionType == 'BUTTON_PRESSED' then
@@ -267,6 +287,8 @@ function game:handleMenuInput(key)
 			elseif self.selectedItem == 2 then
 				self:switchToBoard()
 			elseif self.selectedItem == 1 then
+				utils.stopSound(self.menuMusic)
+				utils.playSound(self.gameMusic, 2)
 				self:switchToGame()
 			end
 		end)
@@ -295,6 +317,9 @@ function game:goBack()
 	elseif self.inBoard then
 		self:switchToMenu()
 	elseif self.inGame then
+		utils.stopSound(self.gameMusic)
+		utils.playSound(self.menuMusic)
+
 		self:switchToMenu()
 		self.enemies = {}
 	end
@@ -588,13 +613,17 @@ function game:showHints(stage)
 		utils.showInputHint("QuickMelee", "Back")
 	elseif stage == "game" then
 		utils.showInputHint("Jump", "Shoot")
+		utils.showInputHint("Reload", "[HOLD] Charge Shot", true)
 		utils.showInputHint("QuickMelee", "Back")
 	end
 end
 
 function game:stop() -- Gets called when leaving workspot
 	self:switchToMenu()
+	utils.stopSound(self.menuMusic)
+	utils.stopSound(self.gameMusic)
 	self.gameScreen = nil
+	self.initialized = false
 	utils.hideCustomHints()
 end
 

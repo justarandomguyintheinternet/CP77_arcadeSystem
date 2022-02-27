@@ -11,7 +11,7 @@ function player:new(x, y, game)
     o.screen = screen
     o.x = x
     o.y = y
-    o.movementSpeed = 120
+    o.movementSpeed = 140
     o.originalSpeed = o.movementSpeed
 
     o.size = {x = 38, y = 60}
@@ -22,6 +22,10 @@ function player:new(x, y, game)
     o.damage = 25
     o.fireRate = 0.15
     o.shootDelay = nil
+
+    o.chargeTime = 0
+    o.chargeImage = nil
+    o.chargeMult = 20
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -45,6 +49,32 @@ function player:update(dt)
     end
     if self.game.input.left then
         self.x = self.x - (self.movementSpeed * dt) * self.game.input.analogRight
+    end
+
+    if self.game.input.chargeShoot then
+        self.chargeTime = self.chargeTime + dt
+        self.chargeTime = math.min(self.chargeTime, 1.5)
+
+        if not self.chargeImage then
+            utils.playSound("w_gun_shotgun_tech_satara_charge", 5)
+            self.chargeImage = ink.image(self.size.x / 2, 0, 1, 1, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup_projectile", 0, inkBrushMirrorType.Vertical)
+            self.chargeImage.pos:Reparent(self.image.pos, -1)
+        end
+
+        local size = self.chargeMult * self.chargeTime
+        self.chargeImage.image:SetMargin(size, size, 0, 0)
+        self.chargeImage.pos:SetMargin((self.size.x / 2) - math.floor(size / 2), -math.floor(size), 0, 0)
+
+        self.movementSpeed = self.originalSpeed - (self.originalSpeed * self.chargeTime / 2)
+    elseif self.chargeTime ~= 0 then
+        self:releaseCharge()
+
+        utils.stopSound("w_gun_shotgun_tech_satara_charge")
+        utils.playSound("dev_surveillance_camera_detect")
+        self.image.pos:RemoveChild(self.chargeImage.pos)
+        self.chargeImage = nil
+        self.chargeTime = 0
+        self.movementSpeed = self.originalSpeed
     end
 
     self.x = math.min(self.game.screenSize.x - self.size.x / 2, math.max(0 - self.size.x / 2, self.x))
@@ -85,6 +115,24 @@ function player:shoot()
     Cron.After(self.fireRate, function ()
         self.shootDelay = false
     end)
+end
+
+function player:releaseCharge()
+    local p = require("modules/games/panzer/projectile"):new(self.game)
+    p.x = self.x + self.chargeImage.pos:GetMargin().left
+    p.y = self.y + self.chargeImage.pos:GetMargin().top
+    p.velY = 100 - self.chargeMult * self.chargeTime
+    p.damage = self.damage
+    p.targetTag = "enemy"
+    p.atlasPath = 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas'
+    p.atlasPart = "shmup_projectile"
+    p.size = {x = self.chargeMult * self.chargeTime, y = self.chargeMult * self.chargeTime}
+    p.isExplosive = true
+
+    p:spawn(self.screen)
+    --p.image.image:SetTintColor(color.new(1, 0, 0, 1))
+
+    table.insert(self.game.projectiles, p)
 end
 
 function player:onDamage(damage)

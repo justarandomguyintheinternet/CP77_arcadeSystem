@@ -241,4 +241,10 @@ function miscUtils.playSound(name, mult)
     end
 end
 
+function miscUtils.stopSound(name)
+    local audioEvent = SoundStopEvent.new()
+    audioEvent.soundName = name
+    GetPlayer():QueueEvent(audioEvent)
+end
+
 return miscUtils
