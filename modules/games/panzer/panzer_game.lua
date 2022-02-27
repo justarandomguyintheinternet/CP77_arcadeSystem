@@ -87,25 +87,47 @@ function game:showDefault() -- Show the default home screen
 	self.menuScreen = ink.canvas(0, 0, inkEAnchor.TopLeft)
 	self.menuScreen:Reparent(self.screen, -1)
 
+	self.bg1 = ink.image(0, -100, self.screenSize.x, self.screenSize.y, "base\\gameplay\\gui\\world\\arcade_games\\quadracer\\quadracer_assets.inkatlas", "sky", 0, inkBrushMirrorType.Vertical)
+	self.bg1.pos:Reparent(self.menuScreen, -1)
+
+	self.bg2 = ink.image(0, 50, self.screenSize.x, self.screenSize.y, "base\\gameplay\\gui\\world\\arcade_games\\contra\\run_and_gun_bkgrnd_spritesheet.inkatlas", "Sky")
+	self.bg2.pos:Reparent(self.menuScreen, -1)
+
+	self.bgFlare1 = ink.image(40, 45, 20, 20, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup-title_flare1", 30, inkBrushMirrorType.Vertical)
+	self.bgFlare1.pos:Reparent(self.menuScreen, -1)
+
+	self.bgFlare2 = ink.image(205, 20, 20, 20, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup-title_flare1", 60, inkBrushMirrorType.Vertical)
+	self.bgFlare2.pos:Reparent(self.menuScreen, -1)
+
+	self.bgFlare3 = ink.image(220, 80, 15, 15, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup-title_flare1", -45, inkBrushMirrorType.Vertical)
+	self.bgFlare3.pos:Reparent(self.menuScreen, -1)
+
+	self.titelPlayer = ink.image(160, 180, 38, 60, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup_ship", 0, inkBrushMirrorType.Vertical)
+	self.titelPlayer.pos:Reparent(self.menuScreen, -1)
+
+	self.titelE1 = ink.image(250, 50, 50, 90, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup-av", 0, inkBrushMirrorType.Vertical)
+	self.titelE1.pos:Reparent(self.menuScreen, -1)
+
+	self.titelExp = ink.image(250, 50, 65, 65, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup-blast2", 0, inkBrushMirrorType.Vertical)
+	self.titelExp.pos:Reparent(self.menuScreen, -1)
+
+	self.titelE2 = ink.image(45, 80, 50, 60, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup_bot01", 0, inkBrushMirrorType.Vertical)
+	self.titelE2.pos:Reparent(self.menuScreen, -1)
+
+	self.titelFluff = ink.text("(c) kWStudios Co. Ltd. 2067\n All rights reserved.", 15, self.screenSize.y - 30, 8)
+	self.titelFluff:Reparent(self.menuScreen, -1)
+
     local area = ink.canvas(45, 10)
     area:Reparent(self.menuScreen, -1)
-
-	ink.rect(160, 120, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 1, Alpha = 1.0 }), 0, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1) -- bg
-	ink.circle(250, 10, 65, HDRColor.new({ Red = 1, Green = 0.75, Blue = 0, Alpha = 1.0 })):Reparent(area, -1)
-
-	ink.rect(20, 300, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
-	ink.rect(100, 280, 400, 400, HDRColor.new({ Red = 0, Green = 0.9, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
-	ink.rect(160, 310, 400, 400, HDRColor.new({ Red = 0, Green = 0.4, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
-	ink.rect(255, 320, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 
     ink.text("Panzer", 20, 0, 50, color.orange):Reparent(area, -1)
     ink.text("Shooter", 40, 50, 40, color.yellow):Reparent(area, -1)
 	ink.text("XTREME", 150, 50, 40, color.red, nil, nil, 45):Reparent(area, -1)
 
-    local buttons = ink.canvas(110, 110)
+	local buttons = ink.canvas(110, 110)
     buttons:Reparent(self.menuScreen, -1)
 
-	self.selectorInk = ink.rect(0, 0, 120, 25, HDRColor.new({ Red = 0, Green = 0.5, Blue = 0.5, Alpha = 1 }))
+	self.selectorInk = ink.rect(0, 0, 120, 25, color.red)
 	self.selectorInk:Reparent(buttons, -1)
 
     ink.text("Play [2 E$]", 0, 0, 25):Reparent(buttons, -1)
@@ -236,18 +258,19 @@ function game:handleMenuInput(key)
 	if not self.inMenu then return end
 
 	if key == "interact" then
-		self.selectorInk:SetTintColor(color.new(0, 0.8, 0.8))
+		self.selectorInk:SetTintColor(color.darkred)
 		Cron.After(0.1, function ()
-			self.selectorInk:SetTintColor(color.new(0, 0.5, 0.5))
+			self.selectorInk:SetTintColor(color.red)
+
+			if self.selectedItem == 3 then
+				self.as.logic:tryExitWorkspot()
+			elseif self.selectedItem == 2 then
+				self:switchToBoard()
+			elseif self.selectedItem == 1 then
+				self:switchToGame()
+			end
 		end)
 
-		if self.selectedItem == 3 then
-			self.as.logic:tryExitWorkspot()
-		elseif self.selectedItem == 2 then
-			self:switchToBoard()
-		elseif self.selectedItem == 1 then
-			self:switchToGame()
-		end
 		utils.playSound("ui_loot_additional")
 	elseif key == "up" then
 		self.selectedItem = self.selectedItem - 1
