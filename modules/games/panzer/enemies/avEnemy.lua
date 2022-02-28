@@ -31,9 +31,9 @@ function av:new(game, x, y, scrollSpeed, health, movementSpeed, damage, hpPaybac
     o.burstLength = 4
     o.currentBurst = 1
     o.recovery = false
-    o.damage = damage or 5
+    o.damage = damage or 4
 
-    o.hpPayback = hpPayback or o.health / 5
+    o.hpPayback = hpPayback or o.health / 2
 
 	self.__index = self
     return setmetatable(o, self)
@@ -82,7 +82,7 @@ function av:spawn(screen)
 
             if self.currentBurst == self.burstLength then
                 self.recovery = true
-                self.currentBurst = self.burstLength * 2
+                self.currentBurst = math.floor(self.burstLength * 2.5)
             end
         else
             self.currentBurst = self.currentBurst - 1
@@ -95,7 +95,7 @@ end
 
 function av:update(dt)
     local yAcc = 1
-    if self.y < 15 then yAcc = 5 end
+    if self.y < 20 then yAcc = 5 end
 
     self.y = self.y + (self.scrollSpeed * dt) * yAcc
     if math.abs(self.targetX - self.x) > 3 then
@@ -133,7 +133,7 @@ end
 
 function av:destroy()
     self:despawn(true)
-    utils.playSound("q101_sc_03_troy_03_fall_explosion")
+    utils.playSound("v_car_dst_fx_explosion")
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y + 20, self.size, 0.15)
     exp:spawn(self.screen)

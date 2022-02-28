@@ -18,14 +18,15 @@ function player:new(x, y, game)
     o.image = nil
     o.animeFrame = 1
 
-    o.health = 10000
-    o.damage = 25
+    o.health = 100
+    o.damage = 5
+    o.originalDamage = o.damage
     o.fireRate = 0.15
     o.shootDelay = nil
 
     o.chargeTime = 0
     o.chargeImage = nil
-    o.chargeMult = 20
+    o.chargeMult = 25
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -56,7 +57,7 @@ function player:update(dt)
         self.chargeTime = math.min(self.chargeTime, 1.5)
 
         if not self.chargeImage then
-            utils.playSound("w_gun_shotgun_tech_satara_charge", 5)
+            utils.playSound("w_gun_shotgun_tech_satara_charge", 7)
             self.chargeImage = ink.image(self.size.x / 2, 0, 1, 1, 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas', "shmup_projectile", 0, inkBrushMirrorType.Vertical)
             self.chargeImage.pos:Reparent(self.image.pos, -1)
         end
@@ -70,7 +71,7 @@ function player:update(dt)
         self:releaseCharge()
 
         utils.stopSound("w_gun_shotgun_tech_satara_charge")
-        utils.playSound("dev_surveillance_camera_detect")
+        utils.playSound("dev_surveillance_camera_detect", 3)
         self.image.pos:RemoveChild(self.chargeImage.pos)
         self.chargeImage = nil
         self.chargeTime = 0
@@ -118,11 +119,13 @@ function player:shoot()
 end
 
 function player:releaseCharge()
+    if self.chargeTime < 0.2 then return end
+
     local p = require("modules/games/panzer/projectile"):new(self.game)
     p.x = self.x + self.chargeImage.pos:GetMargin().left
     p.y = self.y + self.chargeImage.pos:GetMargin().top
     p.velY = 100 - self.chargeMult * self.chargeTime
-    p.damage = self.damage
+    p.damage = self.damage * self.chargeTime * 5
     p.targetTag = "enemy"
     p.atlasPath = 'base\\gameplay\\gui\\world\\arcade_games\\panzer\\hishousai-panzer-spritesheet.inkatlas'
     p.atlasPart = "shmup_projectile"
@@ -143,12 +146,17 @@ function player:onDamage(damage)
     self.image.image:SetOpacity(0.6)
 
     Cron.After(0.1, function ()
+        if not self.image then return end
+
         self.image.image:SetOpacity(1)
     end)
 end
 
 function player:onDeath()
+    collectgarbage()
+
     utils.playSound("v_panzer_dst_fx_explosion")
+    utils.stopSound("w_gun_shotgun_tech_satara_charge")
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y + 20, self.size, 0.2)
     exp:spawn(self.screen)

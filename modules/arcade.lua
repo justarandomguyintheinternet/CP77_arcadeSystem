@@ -26,7 +26,7 @@ function arcade:init() -- Setup game
 		if audio == "mus_cp_arcade_panzer_START_menu" then
 			self.game = require("modules/games/panzer/panzer_game"):new(self.as, self)
 		elseif audio == "mus_cp_arcade_quadra_START_menu" then
-			self.game = require("modules/games/panzer/panzer_game"):new(self.as, self)
+			self.game = require("modules/games/flappy_bird/panzer_game"):new(self.as, self)
 		elseif audio == "mus_cp_arcade_shooter_START_menu" then
 			self.game = require("modules/games/panzer/panzer_game"):new(self.as, self)
 		elseif audio == "mus_cp_arcade_roach_START_menu" then

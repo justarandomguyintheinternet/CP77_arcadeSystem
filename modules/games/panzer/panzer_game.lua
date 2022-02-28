@@ -54,12 +54,12 @@ function game:new(arcadeSys, arcade)
 
 	o.enemySpawning = nil
 	o.chances = {
-		["av"] = 35,
+		["av"] = 30,
 		["mech"] = 70,
 		["drone"] = 100,
 		["station"] = 40
 	}
-	o.spawnChance = 15
+	o.spawnChance = 10
 
 	o.menuMusic = "mus_sq029_vr_game_01_loop_START"
 	o.gameMusic = "mus_mq022_maglev_01_START"
@@ -288,7 +288,7 @@ function game:handleMenuInput(key)
 				self:switchToBoard()
 			elseif self.selectedItem == 1 then
 				utils.stopSound(self.menuMusic)
-				utils.playSound(self.gameMusic, 2)
+				utils.playSound(self.gameMusic, 3)
 				self:switchToGame()
 			end
 		end)
@@ -319,6 +319,7 @@ function game:goBack()
 	elseif self.inGame then
 		utils.stopSound(self.gameMusic)
 		utils.playSound(self.menuMusic)
+		utils.stopSound("mus_q108_concert_glitch_nr1_START")
 
 		self:switchToMenu()
 		self.enemies = {}
@@ -440,26 +441,29 @@ function game:startEnemySpawning()
 		end
 	end
 
-	self.enemySpawning = Cron.Every(0.4, function()
+	self.enemySpawning = Cron.Every(0.3, function()
 		if #self.enemies > 8 then return end
 
-		if math.random() < (self.spawnChance / 100) + self.score / 100000 then
+		if math.random() < (self.spawnChance / 100) + self.score / 25000 then
 			local pick = self.bag[math.random(#self.bag)]
 
+			local speed = math.min(1, self.score / 15000)
+			self.player.damage = self.player.originalDamage + speed * 18
+
 			if pick == "av" then
-				local e = require("modules/games/panzer/enemies/avEnemy"):new(self, math.random(0, self.screenSize.x), 0, 4, 100)
+				local e = require("modules/games/panzer/enemies/avEnemy"):new(self, math.random(0, self.screenSize.x), 0, 4, 40, 5 + speed * 2, 3 + speed * 3)
 				e.y = -e.size.y
 				e:spawn(self.gameScreen)
 			elseif pick == "drone" then
-				local e = require("modules/games/panzer/enemies/drone"):new(self, math.random(0, self.screenSize.x), 0, 5, 100)
+				local e = require("modules/games/panzer/enemies/drone"):new(self, math.random(0, self.screenSize.x), 0, 5, 25, 80 + speed * 20, 2 + speed * 2)
 				e.y = -e.size.y
 				e:spawn(self.gameScreen)
 			elseif pick == "mech" then
-				local e = require("modules/games/panzer/enemies/mech"):new(self, math.random(0, self.screenSize.x), 0, 6, 100)
+				local e = require("modules/games/panzer/enemies/mech"):new(self, math.random(0, self.screenSize.x), 0, 6, 20, 120 + speed * 40, 3 + speed * 3)
 				e.y = -e.size.y
 				e:spawn(self.gameScreen)
 			elseif pick == "station" then
-				local e = require("modules/games/panzer/enemies/stationary"):new(self, math.random(0, self.screenSize.x), 0, 150)
+				local e = require("modules/games/panzer/enemies/stationary"):new(self, math.random(0, self.screenSize.x), 0, 30, nil, 1 + speed)
 				e.y = -e.size.y
 				e:spawn(self.gameScreen)
 			end
@@ -499,43 +503,6 @@ function game:renderBG(dt) -- Move background
 	self.bg2.pos:SetMargin(margin)
 end
 
-function game:renderTubes(dt) -- Draw and move the tubes
-	local closest = 1000000
-
-	local add = math.min(self.tubesPassed / 2, 30)
-	moveX = (dt * (80 + add))
-	for _, tube in pairs(self.tubes) do
-		local x = tube.x
-		local y = tube.y
-		local gap = nil
-
-		x = x - moveX
-		if x < -200 then
-			y = 50 + math.random() * 150
-			gap = math.max(70, self.startHeight - self.tubesPassed * 1)
-
-			x = self:getRightestTube().x + (self.startWidth - self.tubesPassed)
-			x = math.max(850, x)
-		end
-
-		tube:setPos(x, y, gap)
-
-		if math.abs(x - self.player.x) < math.abs(closest) then
-			closest = x - self.player.x
-		end
-
-		if tube:playerCollides(self.player.x, self.player.y, 10) then
-			self:lost()
-		end
-	end
-
-	self.scoreInk:SetText(tostring("Score: " .. self.tubesPassed))
-	if closest < 0 and self.player.closestTube > 0 then
-		self.tubesPassed = self.tubesPassed + 1
-	end
-	self.player.closestTube = closest
-end
-
 function game:lost()
 	self:despawnAllObjects()
 	Cron.Halt(self.enemySpawning)
@@ -555,11 +522,14 @@ function game:lost()
 	end
 
 	self.continueText:SetVisible(true)
+
+	utils.stopSound(self.gameMusic)
+	utils.playSound("mus_q108_concert_glitch_nr1_START")
 end
 
 function game:renderHealth()
-	self.healthText:SetText(tostring("HP: " .. self.player.health))
-	self.scoreInk:SetText(tostring("Score: " .. self.score))
+	self.healthText:SetText(tostring("HP: " .. math.floor(self.player.health)))
+	self.scoreInk:SetText(tostring("Score: " .. math.floor(self.score)))
 end
 
 function game:updateProjectiles(dt)
@@ -622,6 +592,8 @@ function game:stop() -- Gets called when leaving workspot
 	self:switchToMenu()
 	utils.stopSound(self.menuMusic)
 	utils.stopSound(self.gameMusic)
+	utils.stopSound("mus_q108_concert_glitch_nr1_START")
+	utils.stopSound("w_gun_shotgun_tech_satara_charge")
 	self.gameScreen = nil
 	self.initialized = false
 	utils.hideCustomHints()

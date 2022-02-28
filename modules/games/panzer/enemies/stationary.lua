@@ -26,9 +26,9 @@ function station:new(game, x, y, health, movementSpeed, damage, hpPayback)
     o.recovery = false
 
     o.bulletSize = {x = 5, y = 5}
-    o.damage = damage or 5
+    o.damage = damage or 1
 
-    o.hpPayback = hpPayback or o.health / 5
+    o.hpPayback = hpPayback or o.health / 3
 
 	self.__index = self
     return setmetatable(o, self)
@@ -50,11 +50,11 @@ function station:spawn(screen)
             p:spawn(screen)
             table.insert(self.game.projectiles, p)
 
-            local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, -50, ySpeed, self.damage, "player", self.atlasPath, "shmup_projectile", self.bulletSize, false)
+            local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, -40, ySpeed, self.damage, "player", self.atlasPath, "shmup_projectile", self.bulletSize, false)
             p:spawn(screen)
             table.insert(self.game.projectiles, p)
 
-            local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, 50, ySpeed, self.damage, "player", self.atlasPath, "shmup_projectile", self.bulletSize, false)
+            local p = require("modules/games/panzer/projectile"):new(self.game, self.x + self.size.x / 2, self.y + self.size.y, 40, ySpeed, self.damage, "player", self.atlasPath, "shmup_projectile", self.bulletSize, false)
             p:spawn(screen)
             table.insert(self.game.projectiles, p)
 
@@ -103,7 +103,7 @@ end
 
 function station:destroy()
     self:despawn(true)
-    utils.playSound("v_mbike_dst_fx_explosion", 4)
+    utils.playSound("v_mbike_dst_fx_explosion", 5)
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)

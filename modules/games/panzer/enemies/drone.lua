@@ -29,9 +29,9 @@ function drone:new(game, x, y, scrollSpeed, health, movementSpeed, damage, hpPay
 
     o.shootCron = nil
     o.fireRate = 0.4
-    o.damage = damage or 5
+    o.damage = damage or 2
 
-    o.hpPayback = hpPayback or o.health / 5
+    o.hpPayback = hpPayback or o.health / 4
 
 	self.__index = self
     return setmetatable(o, self)
@@ -74,7 +74,7 @@ end
 
 function drone:update(dt)
     local yAcc = 1
-    if self.y < 15 then yAcc = 5 end
+    if self.y < 20 then yAcc = 5 end
 
     self.y = self.y + (self.scrollSpeed * dt) * yAcc
 
@@ -109,7 +109,7 @@ end
 
 function drone:destroy()
     self:despawn(true)
-    utils.playSound("q112_billboard_explosion", 2)
+    utils.playSound("dev_fire_extinguisher_explode", 1)
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)
