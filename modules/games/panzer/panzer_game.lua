@@ -288,7 +288,7 @@ function game:handleMenuInput(key)
 				self:switchToBoard()
 			elseif self.selectedItem == 1 then
 				utils.stopSound(self.menuMusic)
-				utils.playSound(self.gameMusic, 3)
+				utils.playSound(self.gameMusic, 2)
 				self:switchToGame()
 			end
 		end)
@@ -524,7 +524,7 @@ function game:lost()
 	self.continueText:SetVisible(true)
 
 	utils.stopSound(self.gameMusic)
-	utils.playSound("mus_q108_concert_glitch_nr1_START")
+	utils.playSound("mus_q108_concert_glitch_nr1_START", 2)
 end
 
 function game:renderHealth()

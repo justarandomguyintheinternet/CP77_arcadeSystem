@@ -109,7 +109,7 @@ end
 
 function drone:destroy()
     self:despawn(true)
-    utils.playSound("dev_fire_extinguisher_explode", 1)
+    utils.playSound("dev_fire_extinguisher_explode")
 
     local exp = require("modules/games/panzer/explosion"):new(self.game, self.x, self.y, self.size.y, self.size, 0.15)
     exp:spawn(self.screen)

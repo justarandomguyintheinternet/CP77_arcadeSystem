@@ -234,7 +234,7 @@ end
 function miscUtils.playSound(name, mult)
     local m = mult or 1
 
-    for i = 0, m do
+    for _ = 1, m do
         local audioEvent = SoundPlayEvent.new ()
         audioEvent.soundName = name
         GetPlayer():QueueEvent(audioEvent)

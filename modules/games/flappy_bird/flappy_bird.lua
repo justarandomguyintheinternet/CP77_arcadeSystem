@@ -53,8 +53,8 @@ function game:new(arcadeSys, arcade)
 	o.boardScreen = nil
 	o.leaderboard = nil
 
-	o.menuMusic = "mus_sq029_vr_game_01_loop_START"
-	o.gameMusic = "mus_mq022_maglev_01_START"
+	o.menuMusic = "mus_sq023_meet_joshua_01_START"
+	o.gameMusic = "mus_sq031_cmf_01_START"
 	o.lostMusic = "mus_q108_concert_glitch_nr1_START"
 
 	self.__index = self
@@ -84,17 +84,37 @@ function game:showDefault() -- Show the default home screen
 	self.menuScreen = ink.canvas(0, 0, inkEAnchor.TopLeft)
 	self.menuScreen:Reparent(self.screen, -1)
 
-    local area = ink.canvas(45, 10)
+	local i = ink.image(0, 0, self.screenSize.x, self.screenSize.y, "base\\gameplay\\gui\\world\\arcade_games\\quadracer\\quadracer_assets.inkatlas", "sky", 0, inkBrushMirrorType.Vertical)
+	i.pos:Reparent(self.menuScreen, -1)
+
+	local i = ink.image(self.screenSize.x / 2 - 135, 225, 300, 150, "base\\gameplay\\gui\\world\\vending_machines\\atlas_roach_race.inkatlas", "fire_ball1", -90)
+	i.pos:Reparent(self.menuScreen, -1)
+
+	local sprite = self.sprites[1]
+	local b = ink.image(12, 55, sprite.size.x, sprite.size.y, "base\\gameplay\\gui\\world\\arcade_games\\contra\\run_and_gun_bkgrnd_spritesheet.inkatlas", sprite.part, 0, inkBrushMirrorType.Vertical)
+	b.pos:Reparent(self.menuScreen, -1)
+
+	local sprite = self.sprites[3]
+	local b = ink.image(88, 75, sprite.size.x, sprite.size.y, "base\\gameplay\\gui\\world\\arcade_games\\contra\\run_and_gun_bkgrnd_spritesheet.inkatlas", sprite.part, 0, inkBrushMirrorType.Vertical)
+	b.pos:Reparent(self.menuScreen, -1)
+
+	local sprite = self.sprites[2]
+	local b = ink.image(145, 80, sprite.size.x, sprite.size.y, "base\\gameplay\\gui\\world\\arcade_games\\contra\\run_and_gun_bkgrnd_spritesheet.inkatlas", sprite.part, 0, inkBrushMirrorType.Vertical)
+	b.pos:Reparent(self.menuScreen, -1)
+
+	local sprite = self.sprites[4]
+	local b = ink.image(218, 35, sprite.size.x, sprite.size.y, "base\\gameplay\\gui\\world\\arcade_games\\contra\\run_and_gun_bkgrnd_spritesheet.inkatlas", sprite.part, 0, inkBrushMirrorType.Vertical)
+	b.pos:Reparent(self.menuScreen, -1)
+
+	local sprite = self.sprites[5]
+	local b = ink.image(275, 120, sprite.size.x, sprite.size.y, "base\\gameplay\\gui\\world\\arcade_games\\contra\\run_and_gun_bkgrnd_spritesheet.inkatlas", sprite.part, 0, inkBrushMirrorType.Vertical)
+	b.pos:Reparent(self.menuScreen, -1)
+
+	local b = ink.image(10, 80, 120, 60, 'base\\gameplay\\gui\\world\\vending_machines\\atlas_roach_race.inkatlas', 'gryphon_5', -20, inkBrushMirrorType.Vertical)
+    b.pos:Reparent(self.menuScreen, -1)
+
+	local area = ink.canvas(45, 10)
     area:Reparent(self.menuScreen, -1)
-
-	ink.rect(160, 120, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 1, Alpha = 1.0 }), 0, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1) -- bg
-	ink.circle(250, 10, 65, HDRColor.new({ Red = 1, Green = 0.75, Blue = 0, Alpha = 1.0 })):Reparent(area, -1)
-	--ink.rect(-40, -10, 400, 20, HDRColor.new({ Red = 1, Green = 1, Blue = 1, Alpha = 1.0 }), 0):Reparent(area, -1) -- clouds
-
-	ink.rect(20, 300, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
-	ink.rect(100, 280, 400, 400, HDRColor.new({ Red = 0, Green = 0.9, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
-	ink.rect(160, 310, 400, 400, HDRColor.new({ Red = 0, Green = 0.4, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
-	ink.rect(255, 320, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 
     ink.text("Cyber", 40, 0, 50, color.yellow):Reparent(area, -1)
     ink.text("Gryphon", 100, 50, 40, color.red):Reparent(area, -1)
@@ -108,6 +128,9 @@ function game:showDefault() -- Show the default home screen
     ink.text("Play [2 E$]", 0, 0, 25):Reparent(buttons, -1)
     ink.text("Leaderboard", 0, 30, 25):Reparent(buttons, -1)
 	ink.text("Exit", 0, 60, 25):Reparent(buttons, -1)
+
+	local fluff = ink.text("[c] kWStudios Co. Ltd. 2062\n All rights reserved.", 15, self.screenSize.y - 30, 8)
+	fluff:Reparent(self.menuScreen, -1)
 
 	self:loadHighscore()
 end
@@ -176,7 +199,7 @@ function game:handleMenuInput(key)
 				self:switchToBoard()
 			elseif self.selectedItem == 1 then
 				utils.stopSound(self.menuMusic)
-				utils.playSound(self.gameMusic, 3)
+				utils.playSound(self.gameMusic, 2)
 
 				self:switchToGame()
 			end

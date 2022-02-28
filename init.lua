@@ -61,6 +61,7 @@ function as:new()
     registerForEvent("onShutdown", function ()
         if self.logic.currentWorkspot then
             self.logic.currentWorkspot:forceExit()
+            self.logic.currentArcade.game:stop()
         end
         self.utils.hideCustomHints()
     end)

@@ -1,4 +1,5 @@
 local ink = require("modules/ui/inkHelper")
+local utils = require("modules/util/utils")
 
 player = {}
 
@@ -18,6 +19,8 @@ function player:new(game, x, y)
     o.birdInk = nil
     o.animeFrame = 1
 
+    o.dt = 0
+
 	self.__index = self
    	return setmetatable(o, self)
 end
@@ -28,6 +31,7 @@ function player:spawn(screen)
 end
 
 function player:update(dt)
+    self.dt = dt
     self.velY = self.velY + self.grav * (dt * 80)
     self.y = self.y + self.velY
 
@@ -49,7 +53,8 @@ function player:updateAnimation()
 end
 
 function player:jump()
-    self.velY = -2.5
+    self.velY = -2.5 - math.abs((1 - (60 * self.dt)))
+    utils.playSound("lcm_wallrun_in", 3)
 end
 
 return player
