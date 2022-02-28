@@ -2,8 +2,10 @@ local ink = require("modules/ui/inkHelper")
 
 player = {}
 
-function player:new(x, y)
+function player:new(game, x, y)
 	local o = {}
+
+    o.game = game
 
     o.x = x
     o.y = y
@@ -31,6 +33,10 @@ function player:update(dt)
 
     self.birdInk.pos:SetMargin(self.x - 30, self.y - 15, 0, 0)
     self.birdInk.image:SetRotation(self.velY * 10)
+
+    if self.y < -10 or self.y > self.game.screenSize.y + 10 then
+        self.game:lost()
+    end
 end
 
 function player:updateAnimation()

@@ -2,7 +2,6 @@ local color = require("modules/ui/color")
 local ink = require("modules/ui/inkHelper")
 local Cron = require("modules/external/Cron")
 local utils = require("modules/util/utils")
-local tween = require("modules/external/tween/tween") -- https://github.com/kikito/tween.lua
 
 game = {}
 
@@ -16,6 +15,7 @@ function game:new(arcadeSys, arcade)
 	o.inMenu = true
 	o.inBoard = false
 	o.inGame = false
+	o.initialized = false
 
 	o.screen = nil
 
@@ -29,10 +29,19 @@ function game:new(arcadeSys, arcade)
 	o.player = nil
 	o.animeCron = nil
 
+	o.sprites = {
+		{part = "Building01", size = {x = 70, y = 200}},
+		{part = "Building02", size = {x = 70, y = 200}},
+		{part = "Building03", size = {x = 55, y = 250}},
+		{part = "Building04", size = {x = 55, y = 220}},
+		{part = "Building05", size = {x = 75, y = 140}}
+	}
+
 	o.tubesPassed = 0
 	o.scoreInk = nil
 	o.startWidth = 160
 	o.startHeight = 120
+	o.keys = {}
 
 	o.gameOver = false
 	o.gameText = nil
@@ -43,6 +52,10 @@ function game:new(arcadeSys, arcade)
 	o.highscore = 0
 	o.boardScreen = nil
 	o.leaderboard = nil
+
+	o.menuMusic = "mus_sq029_vr_game_01_loop_START"
+	o.gameMusic = "mus_mq022_maglev_01_START"
+	o.lostMusic = "mus_q108_concert_glitch_nr1_START"
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -83,8 +96,8 @@ function game:showDefault() -- Show the default home screen
 	ink.rect(160, 310, 400, 400, HDRColor.new({ Red = 0, Green = 0.4, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 	ink.rect(255, 320, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5})):Reparent(area, -1)
 
-    ink.text("Fappy", 40, 0, 50, color.yellow):Reparent(area, -1)
-    ink.text("Berd", 100, 50, 40, color.red):Reparent(area, -1)
+    ink.text("Cyber", 40, 0, 50, color.yellow):Reparent(area, -1)
+    ink.text("Gryphon", 100, 50, 40, color.red):Reparent(area, -1)
 
     local buttons = ink.canvas(110, 110)
     buttons:Reparent(self.menuScreen, -1)
@@ -99,19 +112,32 @@ function game:showDefault() -- Show the default home screen
 	self:loadHighscore()
 end
 
+function game:onEnteredWorkspot() -- Gets called once after entering the workspot
+	utils.playSound(self.menuMusic)
+end
+
 function game:update(dt) -- Runs every frame once fully in workspot
+	if not self.initialized then
+		self.initialized = true
+		self:onEnteredWorkspot()
+	end
+
 	if self.inGame and not self.gameOver then
 		self.player:update(dt)
 		self:renderGame(dt)
-		if self.player.y < -10 or self.player.y > self.screenSize.y + 10 then
-			self:lost()
-		end
 	end
 end
 
 function game:handleInput(action) -- Passed forward from onAction
 	local actionName = Game.NameToString(action:GetName(action))
 	local actionType = action:GetType(action).value
+
+	if utils.has_value(self.keys, actionName) then return end
+
+	table.insert(self.keys, actionName)
+	Cron.NextTick(function ()
+		utils.removeItem(self.keys, actionName)
+	end)
 
 	if actionName == 'UI_Apply' then
 		if actionType == 'BUTTON_PRESSED' then
@@ -143,27 +169,34 @@ function game:handleMenuInput(key)
 		self.selectorInk:SetTintColor(color.new(0, 0.8, 0.8))
 		Cron.After(0.1, function ()
 			self.selectorInk:SetTintColor(color.new(0, 0.5, 0.5))
+
+			if self.selectedItem == 3 then
+				self.as.logic:tryExitWorkspot()
+			elseif self.selectedItem == 2 then
+				self:switchToBoard()
+			elseif self.selectedItem == 1 then
+				utils.stopSound(self.menuMusic)
+				utils.playSound(self.gameMusic, 3)
+
+				self:switchToGame()
+			end
 		end)
 
-		if self.selectedItem == 3 then
-			self.as.logic:tryExitWorkspot()
-		elseif self.selectedItem == 2 then
-			self:switchToBoard()
-		elseif self.selectedItem == 1 then
-			self:switchToGame()
-		end
+		utils.playSound("ui_loot_additional")
 	elseif key == "up" then
 		self.selectedItem = self.selectedItem - 1
 		if self.selectedItem < 1 then
 			self.selectedItem = 3
 		end
 		self:selectMenuItem()
+		utils.playSound("ui_menu_onpress")
 	elseif key == "down" then
 		self.selectedItem = self.selectedItem + 1
 		if self.selectedItem > 3 then
 			self.selectedItem = 1
 		end
 		self:selectMenuItem()
+		utils.playSound("ui_menu_onpress")
 	end
 end
 
@@ -174,7 +207,7 @@ function game:handleGameInput(key)
 		self.player:jump()
 	end
 	if self.gameOver then
-		self:switchToMenu()
+		self:goBack()
 	end
 end
 
@@ -184,12 +217,18 @@ function game:goBack()
 	elseif self.inBoard then
 		self:switchToMenu()
 	elseif self.inGame then
-		-- Add logic to stop and lose game
+		utils.stopSound(self.gameMusic)
+		utils.playSound(self.menuMusic)
+		utils.stopSound(self.lostMusic)
+
 		self:switchToMenu()
 	end
 end
 
 function game:switchToMenu()
+	utils.hideCustomHints()
+	self:showHints("menu")
+
 	self.menuScreen:SetVisible(true)
 	if self.gameScreen then self.gameScreen:SetVisible(false) end
 	if self.boardScreen then self.boardScreen:SetVisible(false) end
@@ -204,6 +243,7 @@ function game:switchToMenu()
 		self.scoreText:SetVisible(false)
 		self.continueText:SetVisible(false)
 
+		self:clearBG()
 		self.gameScreen = nil
 	end
 
@@ -216,7 +256,16 @@ function game:switchToMenu()
 	end
 end
 
+function game:clearBG()
+	self.gameScreen:RemoveAllChildren()
+
+	self.gameBG = {}
+end
+
 function game:switchToGame()
+	utils.hideCustomHints()
+	self:showHints("game")
+
 	utils.spendMoney(2)
 	if not self.gameScreen then
 		self:initGame()
@@ -227,12 +276,16 @@ function game:switchToGame()
 	self.inMenu = false
 	self.inGame = true
 
+	self.score = 0
 	self.animeCron = Cron.Every(0.2, function ()
 		self.player:updateAnimation()
 	end)
 end
 
 function game:switchToBoard() -- Switch to leaderboard
+	utils.hideCustomHints()
+	self:showHints("board")
+
 	if not self.boardScreen then
 		self:initBoard()
 	end
@@ -242,31 +295,22 @@ function game:switchToBoard() -- Switch to leaderboard
 	self.inMenu = false
 	self.inBoard = true
 end
--- base/gameplay/gui/wigets/minimap
+
 function game:initGame()
 	self.gameScreen = ink.canvas(0, 0, inkEAnchor.TopLeft)
 	self.gameScreen:Reparent(self.screen, -1)
 	self.gameScreen:SetVisible(false)
 
-	ink.rect(160, 120, 400, 400, HDRColor.new({ Red = 0, Green = 0.7, Blue = 1, Alpha = 1.0 }), 0, Vector2.new({X = 0.5, Y = 0.5})):Reparent(self.gameScreen, -1) -- bg
-	ink.circle(250, 10, 65, HDRColor.new({ Red = 1, Green = 0.75, Blue = 0, Alpha = 1.0 })):Reparent(self.gameScreen, -1) -- sun
-
-	for x = 1, 10 do -- mountains
-		local x = (x * 100) - 150
-		local y = 295 + math.random() * 100
-		local r = ink.rect(x, y, 400, 400, HDRColor.new({ Red = 0, Green = 0.5 + math.random() * 0.5, Blue = 0, Alpha = 1.0 }), 45, Vector2.new({X = 0.5, Y = 0.5}))
-		r:Reparent(self.gameScreen, -1)
-		table.insert(self.gameBG, r)
-	end
+	self:initBG()
 
 	local tube = require("modules/games/flappy_bird/tube")
 	for x = 1, 10 do -- tubes
-		local t = tube:new(x * self.startWidth + 150, 50 + math.random() * 150, self.startHeight, HDRColor.new({ Red = 0, Green = 0, Blue = 1, Alpha = 1.0 }))
+		local t = tube:new(x * self.startWidth + 150, 50 + math.random() * 150, self.startHeight)
 		t:spawn(self.gameScreen)
 		table.insert(self.tubes, t)
 	end
 
-	self.player = require("modules/games/flappy_bird/player"):new(100, self.screenSize.y / 2)
+	self.player = require("modules/games/flappy_bird/player"):new(self, 100, self.screenSize.y / 2)
 	self.player:spawn(self.gameScreen)
 
 	self.scoreInk = ink.text("Score: 0", 20, 10, 20)
@@ -289,6 +333,31 @@ function game:initGame()
 	self.continueText:Reparent(self.gameScreen, -1)
 end
 
+function game:initBG()
+	self.sky = ink.image(0, 0, self.screenSize.x, self.screenSize.y, "base\\gameplay\\gui\\world\\arcade_games\\quadracer\\quadracer_assets.inkatlas", "sky", 0, inkBrushMirrorType.Vertical)
+	self.sky.pos:Reparent(self.gameScreen, -1)
+
+	self.sun = ink.image(self.screenSize.x / 2 - 135, 225, 300, 150, "base\\gameplay\\gui\\world\\vending_machines\\atlas_roach_race.inkatlas", "fire_ball1", -90)
+	self.sun.pos:Reparent(self.gameScreen, -1)
+
+	for i = 1, 10 do
+		local rN = math.random(#self.sprites)
+		local sprite = self.sprites[rN]
+		local mirror = inkBrushMirrorType.Vertical
+		if rN % 2 == 0 then mirror = inkBrushMirrorType.Both end
+
+		local x = 0
+		if i ~= 1 then
+			x = self:getRightestBuilding().pos:GetMargin().left + self:getRightestBuilding().image:GetMargin().left + math.random(2, 10)
+		end
+
+		local y = self.screenSize.y - sprite.size.y + math.random(0, sprite.size.y * 0.3)
+		local r = ink.image(x, y, sprite.size.x, sprite.size.y, "base\\gameplay\\gui\\world\\arcade_games\\contra\\run_and_gun_bkgrnd_spritesheet.inkatlas", sprite.part, 0, mirror)
+		r.pos:Reparent(self.gameScreen, -1)
+		table.insert(self.gameBG, r)
+	end
+end
+
 function game:initBoard()
 	self.boardScreen = ink.canvas(0, 0, inkEAnchor.TopLeft)
 	self.boardScreen:Reparent(self.screen, -1)
@@ -306,17 +375,27 @@ function game:renderBG(dt) -- Move background
 	local moveX = (dt * (50 + add))
 
 	for _, rect in pairs(self.gameBG) do
-		local margin = rect:GetMargin()
+		local margin = rect.pos:GetMargin()
 
 		if margin.left - moveX < -200 then
-			local y = 295 + math.random() * 100
-			margin.left = margin.left + 1000
+			local rN = math.random(#self.sprites)
+			local sprite = self.sprites[rN]
+
+			local mirror = inkBrushMirrorType.Vertical
+			if rN % 2 == 0 then mirror = inkBrushMirrorType.Both end
+			local y = self.screenSize.y - sprite.size.y + math.random(0, sprite.size.y * 0.3)
+
+			rect.image:SetTexturePart(sprite.part)
+			rect.image:SetMargin(sprite.size.x, sprite.size.y, 0, 0)
+			rect.image:SetBrushMirrorType(mirror)
+
+			margin.left = self:getRightestBuilding().pos:GetMargin().left + self:getRightestBuilding().image:GetMargin().left + math.random(2, 10)
 			margin.top = y
-			rect:SetTintColor(HDRColor.new({ Red = 0, Green = 0.5 + math.random() * 0.5, Blue = 0, Alpha = 1.0 }))
+			rect.pos:Reparent(self.gameScreen, -1)
 		end
 
 		margin = inkMargin.new({ left = margin.left - moveX, top = margin.top, right = 0.0, bottom = 0.0 })
-		rect:SetMargin(margin)
+		rect.pos:SetMargin(margin)
 	end
 end
 
@@ -378,6 +457,9 @@ function game:lost()
 	if self.animeCron then
 		Cron.Halt(self.animeCron)
 	end
+
+	utils.stopSound(self.gameMusic)
+	utils.playSound(self.lostMusic)
 end
 
 function game:getRightestTube()
@@ -387,6 +469,22 @@ function game:getRightestTube()
 	for _, t in pairs(self.tubes) do
 		if t.x > x then
 			x = t.x
+			tube = t
+		end
+	end
+
+	return tube
+end
+
+function game:getRightestBuilding()
+	local x = -100
+	local tube = nil
+
+	for _, t in pairs(self.gameBG) do
+		local margin = t.pos:GetMargin()
+
+		if margin.left > x then
+			x = margin.left
 			tube = t
 		end
 	end
@@ -415,9 +513,30 @@ function game:saveHighscore(score)
 	Game.GetQuestsSystem():SetFactStr('arcade_bird_hs', score)
 end
 
+function game:showHints(stage)
+	if stage == "menu" then
+		utils.showInputHint("ChoiceScrollDown", "Scroll up")
+		utils.showInputHint("ChoiceScrollUp", "Scroll down")
+		utils.showInputHint("UI_Apply", "Select")
+		utils.showInputHint("QuickMelee", "Back")
+	elseif stage == "board" then
+		utils.showInputHint("QuickMelee", "Back")
+	elseif stage == "game" then
+		utils.showInputHint("Jump", "Jump")
+		utils.showInputHint("QuickMelee", "Back")
+	end
+end
+
 function game:stop() -- Gets called when leaving workspot
 	self:switchToMenu()
+	utils.stopSound(self.menuMusic)
+	utils.stopSound(self.gameMusic)
+	utils.stopSound(self.lostMusic)
+
+	self.screen:RemoveChild(self.gameScreen)
 	self.gameScreen = nil
+	self.initialized = false
+	utils.hideCustomHints()
 end
 
 return game

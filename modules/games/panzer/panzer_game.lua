@@ -594,6 +594,8 @@ function game:stop() -- Gets called when leaving workspot
 	utils.stopSound(self.gameMusic)
 	utils.stopSound("mus_q108_concert_glitch_nr1_START")
 	utils.stopSound("w_gun_shotgun_tech_satara_charge")
+
+	self.screen:RemoveChild(self.gameScreen)
 	self.gameScreen = nil
 	self.initialized = false
 	utils.hideCustomHints()
