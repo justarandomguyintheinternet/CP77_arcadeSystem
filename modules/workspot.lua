@@ -106,6 +106,8 @@ function workspot:applyRestrictions()
 	Game.ApplyEffectOnPlayer("GameplayRestriction.NoZooming")
 	Game.ApplyEffectOnPlayer("GameplayRestriction.NoScanning")
 	Game.ApplyEffectOnPlayer("GameplayRestriction.NoCombat")
+	Game.ApplyEffectOnPlayer("GameplayRestriction.VehicleNoSummoning")
+	Game.ApplyEffectOnPlayer("GameplayRestriction.NoPhone")
 	StatusEffectHelper.RemoveStatusEffectsWithTag(GetPlayer(), "Breathing")
 end
 
@@ -115,6 +117,8 @@ function workspot:removeRestrictions()
 	Game.RemoveEffectPlayer("GameplayRestriction.NoScanning")
 	Game.RemoveEffectPlayer("GameplayRestriction.NoCombat")
 	Game.RemoveEffectPlayer("GameplayRestriction.FastForwardCrouchLock")
+	Game.RemoveEffectPlayer("GameplayRestriction.VehicleNoSummoning")
+	Game.RemoveEffectPlayer("GameplayRestriction.NoPhone")
 	GetPlayer():ReevaluateAllBreathingEffects()
 end
 
