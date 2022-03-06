@@ -1,8 +1,18 @@
 local Cron = require("modules/external/Cron")
 
-observers = {}
+observers = {
+    noSave = false
+}
 
 function observers.startInputObserver(as)
+
+    Override("gameScriptableSystem", "IsSavingLocked", function(_, wrapped)
+        if observers.noSave then
+            return true
+        else
+            return wrapped()
+        end
+    end)
 
     Observe('PlayerPuppet', 'OnGameAttached', function(this)
         observers.startListeners(this)

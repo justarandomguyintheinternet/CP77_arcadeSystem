@@ -17,9 +17,9 @@ local colors = {
     [2] = color.green,
     [3] = color.blue,
     [4] = color.yellow,
-    [5] = color.orange,
+    [5] = color.cyan,
     [6] = color.magenta,
-    [7] = color.lightblue
+    [7] = color.limegreen
 }
 
 fields = {}
@@ -46,8 +46,9 @@ function fields:new(game, x, y, xFields, yFields, fieldSize, gapSize)
 
     o.currentPiece = {}
 
-    o.moveCron = nil
-    o.moveDelay = 0.5
+    o.moveDelay = 0.7
+    o.time = 0
+    o.minDelay = 0.15
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -69,10 +70,6 @@ function fields:spawn(screen)
             self.previewFields[y][x] = self:spawnNewField(self.x + 30 + (self.xFields + x) * (self.fieldSize + self.gapSize), self.y + 20 + y * (self.fieldSize + self.gapSize))
         end
     end
-
-    self.moveCron = Cron.Every(self.moveDelay, function ()
-        self:moveDown()
-    end)
 
     self:setNewPreview()
     self:spawnPiece()
@@ -117,7 +114,6 @@ function fields:spawnPiece() -- Takes the preview piece and spawns it
 
     self:setNewPreview()
     if self:intersects() then
-        self:despawn()
         self.game:lost()
     else
         self:draw(false)
@@ -215,20 +211,27 @@ function fields:breakLines()
             end
         end
         if empty == self.xFields then
-            for y = self.yFields, 2, -1 do
-                for x = self.xFields, 1, -1 do
-                    self.fields[y][x].ink:SetVisible(self.fields[y - 1][x].ink:IsVisible())
-                    self.fields[y][x].ink:SetTintColor(self.fields[y - 1][x].ink:GetTintColor())
+            for Y = y, 2, -1 do
+                for X = self.xFields, 1, -1 do
+                    self.fields[Y][X].ink:SetVisible(self.fields[Y - 1][X].ink:IsVisible())
+                    self.fields[Y][X].ink:SetTintColor(self.fields[Y - 1][X].ink:GetTintColor())
                 end
             end
             self.game.score = self.game.score + 10
+            self.moveDelay = math.max(self.moveDelay - 0.025, self.minDelay)
+
+            utils.playSound("ui_hacking_access_granted", 2)
             self:breakLines()
         end
     end
 end
 
-function fields:despawn()
-    Cron.Halt(self.moveCron)
+function fields:update(dt)
+    self.time = self.time + dt
+    if self.time > self.moveDelay then
+        self.time = 0
+        self:moveDown()
+    end
 end
 
 return fields

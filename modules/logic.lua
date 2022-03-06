@@ -118,6 +118,7 @@ function logic:onInteract() -- Called from onAction observer
 		_, self.currentArcade = self:getArcadeByObject(targetData.target)
 		self.currentWorkspot = require("modules/workspot"):new(self.as)
 		self.currentWorkspot:enter(targetData.target)
+		self.as.observers.noSave = true
 
 		if GetMod("nanoDrone") then
 			utils.hideCustomHints("drone")
@@ -139,6 +140,8 @@ function logic:onExitedWorkspot() -- Gets called when workspot has finished exit
 	if GetMod("nanoDrone") then
 		utils.showInputHint("QuickMelee", "Activate NanoDrone", 1, true, "drone")
 	end
+
+	self.as.observers.noSave = false
 end
 
 return logic

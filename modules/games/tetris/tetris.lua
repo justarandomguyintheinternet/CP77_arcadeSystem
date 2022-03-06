@@ -149,6 +149,7 @@ function game:update(dt) -- Runs every frame once fully in workspot
 	end
 
 	if self.inGame and not self.gameOver then
+		self.fields:update(dt)
 		self:renderGame(dt)
 	end
 end
@@ -322,7 +323,6 @@ end
 
 function game:clearBG()
 	self.gameScreen:RemoveAllChildren()
-	self.fields:despawn()
 	self.fields = nil
 	self.rains = {}
 end
