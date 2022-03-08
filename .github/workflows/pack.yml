@@ -1,0 +1,26 @@
+name: pack
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup folder
+        run: |
+          cd ${{ github.workspace }}
+          sudo mkdir -p /arcadeSystemPacked/bin/x64/plugins/cyber_engine_tweaks/mods/arcadeSystem/
+      - name: Copy files
+        run: |
+          sudo cp -r modules /arcadeSystemPacked/bin/x64/plugins/cyber_engine_tweaks/mods/arcadeSystem/
+          sudo cp -r init.lua /arcadeSystemPacked/bin/x64/plugins/cyber_engine_tweaks/mods/arcadeSystem/
+      - name: Upload zip
+        uses: actions/upload-artifact@v2
+        with:
+            name: arcadeSystemPacked
+            path: /arcadeSystemPacked/
