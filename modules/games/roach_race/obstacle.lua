@@ -3,13 +3,14 @@ local Cron = require("modules/external/Cron")
 
 obstacle = {}
 
-function obstacle:new(x, y, size, sprites, delay, speed)
+function obstacle:new(x, y, size, sprites, delay, speed, sizeCol)
 	local o = {}
 
     o.x = x
     o.y = y
 
     o.size = size or {x = 15, y = 15}
+    o.sizeCollision = sizeCol or size
     o.path = 'base\\gameplay\\gui\\world\\vending_machines\\atlas_roach_race.inkatlas'
     o.sprites = sprites
 

@@ -12,9 +12,10 @@ function player:new(game, x, y)
     o.x = x
     o.y = y
     o.size = {x = 50, y = 40}
+    o.colSize = {x = 15, y = 25}
 
     o.velY = 0
-    o.grav = 0.075
+    o.grav = 0.09
     o.dt = 0
 
     o.ink = nil
@@ -62,8 +63,8 @@ end
 
 function player:jump()
     if self.velY ~= 0 then return end
-    self.velY = -2.5 - math.abs((1 - (60 * self.dt)))
-    utils.playSound("lcm_wallrun_in", 3)
+    self.velY = -3.5 - math.abs((1 - (60 * self.dt)))
+    utils.playSound("test_beep_01", 5)
 end
 
 return player

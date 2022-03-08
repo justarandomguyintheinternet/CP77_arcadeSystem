@@ -33,6 +33,8 @@ function game:new(arcadeSys, arcade)
 	o.keys = {}
 
 	o.obstacles = {}
+	o.spawnDelay = 2.5
+	o.spawnTimer = 0
 
 	o.gameOver = false
 	o.gameText = nil
@@ -44,9 +46,9 @@ function game:new(arcadeSys, arcade)
 	o.boardScreen = nil
 	o.leaderboard = nil
 
-	o.menuMusic = "mus_sq023_meet_joshua_01_START"
+	o.menuMusic = "amb_bl_int_ghost_town_jingles_arcade_04"
 	o.gameMusic = "mus_sq031_cmf_01_START"
-	o.lostMusic = "mus_q108_concert_glitch_nr1_START"
+	o.lostMusic = "amb_int_EM_elem_electronic_arcade_machine_bleeps_03"
 
 	self.__index = self
    	return setmetatable(o, self)
@@ -119,7 +121,7 @@ function game:showDefault() -- Show the default home screen
 end
 
 function game:onEnteredWorkspot() -- Gets called once after entering the workspot
-	utils.playSound(self.menuMusic)
+	utils.playSound(self.menuMusic, 3)
 end
 
 function game:update(dt) -- Runs every frame once fully in workspot
@@ -132,6 +134,7 @@ function game:update(dt) -- Runs every frame once fully in workspot
 		self.player:update(dt)
 		self:updateObstacles(dt)
 		self:renderGame(dt)
+		self:updateSpawning(dt)
 	end
 end
 
@@ -182,9 +185,6 @@ function game:handleMenuInput(key)
 			elseif self.selectedItem == 2 then
 				self:switchToBoard()
 			elseif self.selectedItem == 1 then
-				utils.stopSound(self.menuMusic)
-				utils.playSound(self.gameMusic, 2)
-
 				self:switchToGame()
 			end
 		end)
@@ -224,8 +224,7 @@ function game:goBack()
 	elseif self.inBoard then
 		self:switchToMenu()
 	elseif self.inGame then
-		utils.stopSound(self.gameMusic)
-		utils.playSound(self.menuMusic)
+		utils.playSound(self.menuMusic, 3)
 		utils.stopSound(self.lostMusic)
 
 		self:switchToMenu()
@@ -261,6 +260,9 @@ end
 function game:clearBG()
 	self.gameScreen:RemoveAllChildren()
 	self.gameBG = {}
+	Cron.Halt(self.spawnCron)
+	for _, o in pairs(self.obstacles) do o:despawn() end
+	self.player:despawn()
 end
 
 function game:switchToGame()
@@ -322,14 +324,6 @@ function game:initGame()
 	self.continueText = ink.text("Press JUMP to continue", 85, 210, 15)
 	self.continueText:SetVisible(false)
 	self.continueText:Reparent(self.gameScreen, -1)
-
-	local o = require("modules/games/roach_race/obstacle"):new(250, 160, {x = 60, y = 40}, {"gryphon_1", "gryphon_2", "gryphon_3", "gryphon_4","gryphon_5"}, 0.2, 1.5)
-	o:spawn(self.gameScreen)
-	table.insert(self.obstacles, o)
-
-	local o = require("modules/games/roach_race/obstacle"):new(350, 190, {x = 15, y = 15}, {"carrot"}, 0.2)
-	o:spawn(self.gameScreen)
-	table.insert(self.obstacles, o)
 end
 
 function game:initBG()
@@ -363,15 +357,55 @@ function game:initBoard()
 	self.boardScreen:SetVisible(false)
 
 	self.leaderboard = require("modules/ui/leaderboard"):new(10, function ()
-		return math.random(4, 87)
+		return math.random(25, 155)
 	end)
 	self.leaderboard:spawn(self.highscore):Reparent(self.boardScreen, -1)
 	self.leaderboard.canvas:SetMargin(110, 28, 0, 0)
 end
 
+function game:updateSpawning(dt)
+	self.spawnDelay = math.max(1.8, self.spawnDelay - dt / 100)
+	self.spawnTimer = self.spawnTimer + dt
+    if self.spawnTimer > self.spawnDelay and self.player.y > self.screenSize.y - 50 then
+        self.spawnTimer = 0
+
+		if math.random() > 0.95 then
+			local o = require("modules/games/roach_race/obstacle"):new(350, 190, {x = 15, y = 15}, {"carrot"}, 0.2)
+			o:spawn(self.gameScreen)
+			table.insert(self.obstacles, o)
+		else
+			local r = math.random(5)
+
+			if r == 1 then
+				local o = require("modules/games/roach_race/obstacle"):new(320, 125, {x = 60, y = 40}, {"gryphon_1", "gryphon_2", "gryphon_3", "gryphon_4","gryphon_5"}, 0.2, 1.5)
+				o:spawn(self.gameScreen)
+				table.insert(self.obstacles, o)
+			elseif r == 2 then
+				local o = require("modules/games/roach_race/obstacle"):new(320, 200, {x = 55, y = 20}, {"roof"}, 0, nil)
+				o:spawn(self.gameScreen)
+				table.insert(self.obstacles, o)
+			elseif r == 3 then
+				local o = require("modules/games/roach_race/obstacle"):new(320, 190, {x = 40, y = 30}, {"fence_small"}, 0, nil)
+				o:spawn(self.gameScreen)
+				table.insert(self.obstacles, o)
+			elseif r == 4 then
+				local o = require("modules/games/roach_race/obstacle"):new(320, 190, {x = 60, y = 30}, {"fence_big"}, 0, nil)
+				o:spawn(self.gameScreen)
+				table.insert(self.obstacles, o)
+			elseif r == 5 then
+				local o = require("modules/games/roach_race/obstacle"):new(320, 215, {x = 40, y = 5}, {"hole"}, 0, nil, {x = 40, y = 20})
+				o:spawn(self.gameScreen)
+				table.insert(self.obstacles, o)
+			end
+		end
+	end
+end
+
 function game:renderBG(dt) -- Move background
 	local add = math.min(self.score / 2, 20)
-	local moveX = (dt * (50 + add))
+	local moveX = (dt * (80 + add))
+
+	self.score = self.score + dt
 
 	for _, cloud in pairs(self.gameBG) do
 		local margin = cloud.pos:GetMargin()
@@ -394,11 +428,13 @@ function game:renderBG(dt) -- Move background
 			self.hearts[h].image:SetVisible(false)
 		end
 	end
+
+	self.scoreInk:SetText(tostring("Score: " .. math.floor(self.score)))
 end
 
 function game:updateObstacles(dt)
-	local add = math.min(self.score / 2, 20)
-	local moveX = (dt * (50 + add))
+	local add = math.min(self.score / 35, 20)
+	local moveX = (dt * (130 + add))
 
 	for _, obj in pairs(self.obstacles) do
 		obj.x = obj.x - (moveX + add) * obj.speed
@@ -412,17 +448,23 @@ function game:updateObstacles(dt)
 			m.left = obj.x
 			obj.ink.pos:SetMargin(m)
 
-			if obj.notHit and obj.x + obj.size.x > self.player.x and obj.x < self.player.x + self.player.size.x and obj.y + obj.size.y > self.player.y and obj.y < self.player.y + self.player.size.y then
+			if obj.notHit and obj.x + obj.sizeCollision.x > self.player.x and obj.x < self.player.x + self.player.colSize.x and obj.y + obj.sizeCollision.y > self.player.y and obj.y < self.player.y + self.player.colSize.y then
 				obj.notHit = false
 
 				if obj.sprites[1] == "carrot" then
-					self.player.lives = math.min(3, self.player.lives + 1)
+					if self.player.lives == 3 then
+						self.score = self.score + 15
+					else
+						self.player.lives = math.min(3, self.player.lives + 1)
+					end
 
 					obj:despawn()
 					self.gameScreen:RemoveChild(obj.ink.pos)
 					utils.removeItem(self.obstacles, obj)
+					utils.playSound("ui_loot_eat", 2)
 				else
 					self.player.lives = self.player.lives - 1
+					utils.playSound("w_feedback_player_damage", 5)
 				end
 			end
 		end
@@ -435,22 +477,26 @@ function game:lost()
 	self.gameOver = true
 	self.gameText:SetVisible(true)
 	self.overText:SetVisible(true)
+	Cron.Halt(self.spawnCron)
+
+	for _, o in pairs(self.obstacles) do o:despawn() end
+	self.player:despawn()
 
 	if self.score > self.highscore then
-		self.highscore = self.tubesPassed
-		self:saveHighscore(self.highscore)
+		self.highscore = math.floor(self.score)
+		self:saveHighscore(math.floor(self.highscore))
 		if self.boardScreen then
 			self.leaderboard:update(self.highscore):Reparent(self.boardScreen, -1)
 			self.leaderboard.canvas:SetMargin(110, 28, 0, 0)
 		end
 		self.scoreText:SetVisible(true)
-		self.scoreText:SetText(tostring("New Highscore: " .. self.tubesPassed))
+		self.scoreText:SetText(tostring("New Highscore: " .. math.floor(self.score)))
 	end
 
 	self.continueText:SetVisible(true)
 
-	utils.stopSound(self.gameMusic)
-	utils.playSound(self.lostMusic)
+	utils.stopSound(self.menuMusic)
+	utils.playSound(self.lostMusic, 2)
 end
 
 function game:getRightestCloud()
@@ -506,7 +552,6 @@ end
 function game:stop() -- Gets called when leaving workspot
 	self:switchToMenu()
 	utils.stopSound(self.menuMusic)
-	utils.stopSound(self.gameMusic)
 	utils.stopSound(self.lostMusic)
 
 	self.screen:RemoveChild(self.gameScreen)
