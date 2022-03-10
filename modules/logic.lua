@@ -15,6 +15,14 @@ function logic:new(arcadeSys)
 	o.arcadeRange = 1.5
 	o.hudActive = false
 
+	o.games = {
+		"panzer",
+		"tetris",
+		"bird",
+		"raoch"
+	}
+	o.currentGameIndex = 1
+
 	self.__index = self
    	return setmetatable(o, self)
 end
@@ -75,7 +83,11 @@ function logic:addMachine(object) -- Gets called OnGameAttached
 	if alreadyHasMachine then return end
 
 	local a = require("modules/arcade"):new(self.as, object)
-	a:init()
+	a:init(self.games[self.currentGameIndex])
+
+	self.currentGameIndex = self.currentGameIndex + 1
+	if self.currentGameIndex > #self.games then self.currentGameIndex = 1 end
+
 	table.insert(self.machines, a)
 end
 

@@ -218,7 +218,7 @@ function fields:breakLines()
                 end
             end
             self.game.score = self.game.score + 10
-            self.moveDelay = math.max(self.moveDelay - 0.025, self.minDelay)
+            self.moveDelay = math.max(self.moveDelay - 0.03, self.minDelay)
 
             utils.playSound("ui_hacking_access_granted", 2)
             self:breakLines()
