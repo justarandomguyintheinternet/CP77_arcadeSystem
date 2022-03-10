@@ -19,7 +19,7 @@ function logic:new(arcadeSys)
 		"panzer",
 		"tetris",
 		"bird",
-		"raoch"
+		"roach"
 	}
 	o.currentGameIndex = 1
 
