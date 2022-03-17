@@ -483,7 +483,7 @@ function game:lost()
 	self.player:despawn()
 
 	if self.score > self.highscore then
-		self.highscore = math.floor(self.score)
+		self.highscore = math.floor(self.score + 0.5)
 		self:saveHighscore(math.floor(self.highscore))
 		if self.boardScreen then
 			self.leaderboard:update(self.highscore):Reparent(self.boardScreen, -1)
@@ -532,7 +532,7 @@ function game:loadHighscore()
 end
 
 function game:saveHighscore(score)
-	Game.GetQuestsSystem():SetFactStr('arcade_roach_hs', score)
+	Game.GetQuestsSystem():SetFactStr('arcade_roach_hs', math.floor(score + 0.5))
 end
 
 function game:showHints(stage)

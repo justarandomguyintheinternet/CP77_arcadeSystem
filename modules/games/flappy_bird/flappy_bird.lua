@@ -465,7 +465,7 @@ function game:lost()
 	self.overText:SetVisible(true)
 
 	if self.tubesPassed > self.highscore then
-		self.highscore = self.tubesPassed
+		self.highscore = math.floor(self.tubesPassed + 0.5)
 		self:saveHighscore(self.highscore)
 		if self.boardScreen then
 			self.leaderboard:update(self.highscore):Reparent(self.boardScreen, -1)
@@ -533,7 +533,7 @@ function game:loadHighscore()
 end
 
 function game:saveHighscore(score)
-	Game.GetQuestsSystem():SetFactStr('arcade_bird_hs', score)
+	Game.GetQuestsSystem():SetFactStr('arcade_bird_hs', math.floor(score + 0.5))
 end
 
 function game:showHints(stage)

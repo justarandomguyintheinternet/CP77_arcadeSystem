@@ -511,7 +511,7 @@ function game:lost()
 	self.gameOverText:SetVisible(true)
 
 	if self.score > self.highscore then
-		self.highscore = self.score
+		self.highscore = math.floor(self.score + 0.5)
 		self:saveHighscore(self.highscore)
 		if self.boardScreen then
 			self.leaderboard:update(self.highscore):Reparent(self.boardScreen, -1)
@@ -570,7 +570,7 @@ function game:loadHighscore()
 end
 
 function game:saveHighscore(score)
-	Game.GetQuestsSystem():SetFactStr('arcade_panzer', score)
+	Game.GetQuestsSystem():SetFactStr('arcade_panzer', math.floor(score + 0.5))
 end
 
 function game:showHints(stage)

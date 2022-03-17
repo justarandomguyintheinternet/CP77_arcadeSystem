@@ -109,6 +109,10 @@ function workspot:applyRestrictions()
 	Game.ApplyEffectOnPlayer("GameplayRestriction.VehicleNoSummoning")
 	Game.ApplyEffectOnPlayer("GameplayRestriction.NoPhone")
 	StatusEffectHelper.RemoveStatusEffectsWithTag(GetPlayer(), "Breathing")
+
+	if GetMod("ImmersiveFirstPerson") then
+		GetMod("ImmersiveFirstPerson").api.Disable()
+	end
 end
 
 function workspot:removeRestrictions()
@@ -120,6 +124,10 @@ function workspot:removeRestrictions()
 	Game.RemoveEffectPlayer("GameplayRestriction.VehicleNoSummoning")
 	Game.RemoveEffectPlayer("GameplayRestriction.NoPhone")
 	GetPlayer():ReevaluateAllBreathingEffects()
+
+	if GetMod("ImmersiveFirstPerson") then
+		GetMod("ImmersiveFirstPerson").api.Enable()
+	end
 end
 
 return workspot

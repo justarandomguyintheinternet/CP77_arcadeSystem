@@ -166,6 +166,8 @@ function miscUtils.showInputHint(key, text, prio, holdAnimation, source)
 end
 
 function miscUtils.hideCustomHints(source)
+    if not Game.GetUISystem() then return end
+
     local evt = DeleteInputHintBySourceEvent.new()
     evt.source = source or "arcade"
     evt.targetHintContainer = "GameplayInputHelper"
