@@ -9,7 +9,7 @@ ink = {}
 ---@param fontStlye string
 ---@param rotation number
 ---@return inkText
-function ink.text(text, x, y, size, color, letterCase, fontStlye, rotation) -- Create a text
+function ink.text(text, x, y, size, color, letterCase, fontStyle, rotation) -- Create a text
     local c = color or HDRColor.new({ Red = 1, Green = 1, Blue = 1, Alpha = 1.0 })
     local case = letterCase or textLetterCase.OriginalCase
     local style = fontStyle or "Medium"
@@ -183,7 +183,7 @@ end
 ---@param p1 table
 ---@param p2 table
 ---@return number
-function ink.distance(p1, p2) -- Returns distance between two points (x, y)
+function ink.distance(p1, p2) -- Returns distance between two points {x, y}
 	local dx = p1.x - p2.x
     local dy = p1.y - p2.y
     return math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))

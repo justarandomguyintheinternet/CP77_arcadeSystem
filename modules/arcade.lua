@@ -26,7 +26,11 @@ function arcade:init(type) -- Setup game
 			return
 		end
 
-		-- local audio = self:getObject().currentGameAudio.value
+		local audio = self:getObject().currentGameAudio.value -- Pachinko machine
+		if audio == "None" then
+			self.as.logic:removeMachine(self:getObject())
+			return
+		end
 
 		-- if audio == "mus_cp_arcade_panzer_START_menu" then
 		-- 	self.game = require("modules/games/panzer/panzer_game"):new(self.as, self)
