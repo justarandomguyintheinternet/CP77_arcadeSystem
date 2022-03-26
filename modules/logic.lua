@@ -117,6 +117,7 @@ function logic:looksAtArcade()
 	if Vector4.GetAngleBetween(target:GetWorldForward(), utils.subVector(target:GetWorldPosition(), GetPlayer():GetWorldPosition())) < 90 then
 		return {target = target, isArcade = false}
 	end
+
 	if (target:GetWorldPosition():Distance(GetPlayer():GetWorldPosition()) < self.arcadeRange) and target:GetClassName().value == "ArcadeMachine" then
 		return {target = target, isArcade = true}
 	else

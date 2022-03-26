@@ -518,7 +518,7 @@ function game:lost()
 			self.leaderboard.canvas:SetMargin(110, 28, 0, 0)
 		end
 		self.hsText:SetVisible(true)
-		self.hsText:SetText(tostring("New Highscore: " .. self.score))
+		self.hsText:SetText(tostring("New Highscore: " .. self.highscore))
 	end
 
 	self.continueText:SetVisible(true)
