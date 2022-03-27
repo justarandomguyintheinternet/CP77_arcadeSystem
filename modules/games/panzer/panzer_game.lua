@@ -131,7 +131,7 @@ function game:showDefault() -- Show the default home screen
 	local buttons = ink.canvas(110, 110)
     buttons:Reparent(self.menuScreen, -1)
 
-	self.selectorInk = ink.rect(0, 0, 120, 25, color.red)
+	self.selectorInk = ink.rect(0, 0, 130, 25, color.red)
 	self.selectorInk:Reparent(buttons, -1)
 
     ink.text("Play [2 E$]", 0, 0, 25):Reparent(buttons, -1)
@@ -183,6 +183,10 @@ function game:handleInput(action) -- Passed forward from onAction
 			self:handleMenuInput("up")
 		end
 	elseif actionName == 'QuickMelee' then
+		if actionType == 'BUTTON_PRESSED' then
+			self:goBack()
+		end
+	elseif actionName == 'UI_Exit' then
 		if actionType == 'BUTTON_PRESSED' then
 			self:goBack()
 		end

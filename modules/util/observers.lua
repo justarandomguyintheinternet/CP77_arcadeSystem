@@ -25,10 +25,6 @@ function observers.startInputObserver(as)
             if actionType == 'BUTTON_PRESSED' then
                 as.logic:onInteract()
             end
-        elseif actionName == 'UI_Exit' then
-            if actionType == 'BUTTON_PRESSED' then
-                as.logic:tryExitWorkspot()
-            end
         end
 
         if as.logic.currentWorkspot then

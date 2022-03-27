@@ -41,6 +41,7 @@ function logic:run(dt) -- Runs inside onUpdate
 	if self.currentWorkspot then
 		if self.currentWorkspot.inWorkspot then
 			self.currentArcade.game:update(dt)
+			Game.ApplyEffectOnPlayer("GameplayRestriction.FastForwardCrouchLock") -- Gets removed after some time otherwise
 		end
 		self.currentWorkspot:update(dt)
 	end
