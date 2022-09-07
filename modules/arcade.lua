@@ -27,7 +27,7 @@ function arcade:init(type) -- Setup game
 		end
 
 		local audio = self:getObject().currentGameAudio.value -- Pachinko machine
-		if audio == "None" then
+		if audio == "None" or audio == "mus_cp_arcade_roach_START_menu" then
 			self.as.logic:removeMachine(self:getObject())
 			return
 		end

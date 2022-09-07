@@ -18,8 +18,7 @@ function logic:new(arcadeSys)
 	o.games = {
 		"panzer",
 		"tetris",
-		"bird",
-		"roach"
+		"bird"
 	}
 	o.currentGameIndex = 1
 
@@ -30,7 +29,8 @@ end
 function logic:run(dt) -- Runs inside onUpdate
 	local targetData = self:looksAtArcade()
 
-	if targetData.isArcade and self:getArcadeByObject(targetData.target) and not self.currentWorkspot then
+	local _, a = self:getArcadeByObject(targetData.target)
+	if targetData.isArcade and self:getArcadeByObject(targetData.target) and not self.currentWorkspot and a.game then
 		utils.createInteractionHub("Play", "UI_Apply", true)
 		self.hudActive = true
 	elseif self.hudActive then
@@ -48,7 +48,7 @@ function logic:run(dt) -- Runs inside onUpdate
 end
 
 function logic:startCron()
-	Cron.Every(0.25, function ()
+	Cron.Every(1.25, function ()
 		-- Add machines visually
         local searchQuery = Game["TSQ_ALL;"]()
         searchQuery.maxDistance = 25
@@ -128,7 +128,8 @@ end
 
 function logic:onInteract() -- Called from onAction observer
 	local targetData = self:looksAtArcade()
-	if targetData.isArcade and not self.currentWorkspot then
+	local _, a = self:getArcadeByObject(targetData.target)
+	if targetData.isArcade and not self.currentWorkspot and a.game then
 		_, self.currentArcade = self:getArcadeByObject(targetData.target)
 		self.currentWorkspot = require("modules/workspot"):new(self.as)
 		self.currentWorkspot:enter(targetData.target)
