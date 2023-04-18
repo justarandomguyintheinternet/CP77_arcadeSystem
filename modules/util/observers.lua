@@ -43,7 +43,8 @@ function observers.startInputObserver(as)
         local roachraceMovie2 = ResRef.FromString("base\\movies\\misc\\arcade\\roachrace.bk2")
         local minigame = ArcadeMinigame.INVALID
         this.currentGame = this:GetDevicePS():GetGameVideoPath()
-        if not ResRef.IsValid(this.currentGame) then
+
+        if not IsDefined(this.currentGame) or not this.currentGame:IsValid() then
             local randValue = RandRange(0, 4)
             if randValue == 0 then
                 this.currentGame = panzerMovie
