@@ -18,7 +18,8 @@ function logic:new(arcadeSys)
 	o.games = {
 		"panzer",
 		"tetris",
-		"bird"
+		"bird",
+		"roach"
 	}
 	o.currentGameIndex = 1
 
@@ -41,7 +42,7 @@ function logic:run(dt) -- Runs inside onUpdate
 	if self.currentWorkspot then
 		if self.currentWorkspot.inWorkspot then
 			self.currentArcade.game:update(dt)
-			Game.ApplyEffectOnPlayer("GameplayRestriction.FastForwardCrouchLock") -- Gets removed after some time otherwise
+			utils.applyStatus("GameplayRestriction.FastForwardCrouchLock") -- Gets removed after some time otherwise
 		end
 		self.currentWorkspot:update(dt)
 	end
@@ -113,7 +114,7 @@ function logic:looksAtArcade()
 		return {target = nil, isArcade = false}
 	end
 
-	if target:GetClassName().value == "ArcadeMachine" then self:addMachine(target) end
+	-- if target:GetClassName().value == "ArcadeMachine" then self:addMachine(target) end
 
 	if Vector4.GetAngleBetween(target:GetWorldForward(), utils.subVector(target:GetWorldPosition(), GetPlayer():GetWorldPosition())) < 90 then
 		return {target = target, isArcade = false}

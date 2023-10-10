@@ -101,13 +101,13 @@ function workspot:forceExit()
 end
 
 function workspot:applyRestrictions()
-	Game.ApplyEffectOnPlayer("GameplayRestriction.NoMovement")
-	Game.ApplyEffectOnPlayer("GameplayRestriction.FastForwardCrouchLock")
-	Game.ApplyEffectOnPlayer("GameplayRestriction.NoZooming")
-	Game.ApplyEffectOnPlayer("GameplayRestriction.NoScanning")
-	Game.ApplyEffectOnPlayer("GameplayRestriction.NoCombat")
-	Game.ApplyEffectOnPlayer("GameplayRestriction.VehicleNoSummoning")
-	Game.ApplyEffectOnPlayer("GameplayRestriction.NoPhone")
+	utils.applyStatus("GameplayRestriction.NoMovement")
+	utils.applyStatus("GameplayRestriction.FastForwardCrouchLock")
+	utils.applyStatus("GameplayRestriction.NoZooming")
+	utils.applyStatus("GameplayRestriction.NoScanning")
+	utils.applyStatus("GameplayRestriction.NoCombat")
+	utils.applyStatus("GameplayRestriction.VehicleNoSummoning")
+	utils.applyStatus("GameplayRestriction.NoPhone")
 	StatusEffectHelper.RemoveStatusEffectsWithTag(GetPlayer(), "Breathing")
 
 	if GetMod("ImmersiveFirstPerson") then
@@ -116,13 +116,13 @@ function workspot:applyRestrictions()
 end
 
 function workspot:removeRestrictions()
-	Game.RemoveEffectPlayer("GameplayRestriction.NoMovement")
-	Game.RemoveEffectPlayer("GameplayRestriction.NoZooming")
-	Game.RemoveEffectPlayer("GameplayRestriction.NoScanning")
-	Game.RemoveEffectPlayer("GameplayRestriction.NoCombat")
-	Game.RemoveEffectPlayer("GameplayRestriction.FastForwardCrouchLock")
-	Game.RemoveEffectPlayer("GameplayRestriction.VehicleNoSummoning")
-	Game.RemoveEffectPlayer("GameplayRestriction.NoPhone")
+	utils.removeStatus("GameplayRestriction.NoMovement")
+	utils.removeStatus("GameplayRestriction.NoZooming")
+	utils.removeStatus("GameplayRestriction.NoScanning")
+	utils.removeStatus("GameplayRestriction.NoCombat")
+	utils.removeStatus("GameplayRestriction.FastForwardCrouchLock")
+	utils.removeStatus("GameplayRestriction.VehicleNoSummoning")
+	utils.removeStatus("GameplayRestriction.NoPhone")
 	GetPlayer():ReevaluateAllBreathingEffects()
 
 	if GetMod("ImmersiveFirstPerson") then

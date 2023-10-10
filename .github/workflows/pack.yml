@@ -15,10 +15,12 @@ jobs:
         run: |
           cd ${{ github.workspace }}
           sudo mkdir -p /arcadeSystemPacked/bin/x64/plugins/cyber_engine_tweaks/mods/arcadeSystem/
+          sudo mkdir -p /arcadeSystemPacked/archive/pc/mod/
       - name: Copy files
         run: |
           sudo cp -r modules /arcadeSystemPacked/bin/x64/plugins/cyber_engine_tweaks/mods/arcadeSystem/
           sudo cp -r init.lua /arcadeSystemPacked/bin/x64/plugins/cyber_engine_tweaks/mods/arcadeSystem/
+          sudo cp -r arcadeSystem.archive /arcadeSystemPacked/archive/pc/mod/
       - name: Upload zip
         uses: actions/upload-artifact@v2
         with:

@@ -113,6 +113,7 @@ function game:showDefault() -- Show the default home screen
     ink.text("Play [2 E$]", 0, 0, 25):Reparent(buttons, -1)
     ink.text("Leaderboard", 0, 30, 25):Reparent(buttons, -1)
 	ink.text("Exit", 0, 60, 25):Reparent(buttons, -1)
+	ink.text("Classic", 218, 80, 35, color.red, nil, nil, -35):Reparent(self.menuScreen, -1)
 
 	local fluff = ink.text("[c] WHuntRed Ltd. 2063\n All rights reserved.", self.screenSize.x - 75, self.screenSize.y - 30, 8)
 	fluff:Reparent(self.menuScreen, -1)

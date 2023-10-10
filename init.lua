@@ -29,7 +29,7 @@ function as:new()
 
         self.logic = require("modules/logic"):new(self)
         self.observers.startInputObserver(self)
-        self.logic:startCron()
+        -- self.logic:startCron()
 
         Observe('RadialWheelController', 'OnIsInMenuChanged', function(_, isInMenu) -- Setup observer and GameUI to detect inGame / inMenu
             self.runtimeData.inMenu = isInMenu

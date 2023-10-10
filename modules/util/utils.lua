@@ -249,4 +249,12 @@ function miscUtils.stopSound(name)
     GetPlayer():QueueEvent(audioEvent)
 end
 
+function miscUtils.applyStatus(effect)
+    Game.GetStatusEffectSystem():ApplyStatusEffect(GetPlayer():GetEntityID(), effect, GetPlayer():GetRecordID(), GetPlayer():GetEntityID())
+end
+
+function miscUtils.removeStatus(effect)
+    Game.GetStatusEffectSystem():RemoveStatusEffect(GetPlayer():GetEntityID(), effect)
+end
+
 return miscUtils
