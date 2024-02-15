@@ -108,6 +108,8 @@ function workspot:applyRestrictions()
 	utils.applyStatus("GameplayRestriction.NoCombat")
 	utils.applyStatus("GameplayRestriction.VehicleNoSummoning")
 	utils.applyStatus("GameplayRestriction.NoPhone")
+	utils.applyStatus("GameplayRestriction.VehicleBlockRadioInput")
+	utils.applyStatus("GameplayRestriction.NoHealing")
 	StatusEffectHelper.RemoveStatusEffectsWithTag(GetPlayer(), "Breathing")
 
 	if GetMod("ImmersiveFirstPerson") then
@@ -123,6 +125,8 @@ function workspot:removeRestrictions()
 	utils.removeStatus("GameplayRestriction.FastForwardCrouchLock")
 	utils.removeStatus("GameplayRestriction.VehicleNoSummoning")
 	utils.removeStatus("GameplayRestriction.NoPhone")
+	utils.removeStatus("GameplayRestriction.VehicleBlockRadioInput")
+	utils.removeStatus("GameplayRestriction.NoHealing")
 	GetPlayer():ReevaluateAllBreathingEffects()
 
 	if GetMod("ImmersiveFirstPerson") then

@@ -85,10 +85,15 @@ function observers.startInputObserver(as)
         this:GetDevicePS():SetArcadeMinigame(this.minigame)
     end)
 
-    ObserveAfter("ArcadeMachine", "SetupMinigame", function(this) -- For naturally spawning machines
-        if this and this:GetClassName().value == "ArcadeMachine" then
-            as.logic:addMachine(this)
-        end
+    -- ObserveAfter("ArcadeMachine", "SetupMinigame", function(this) -- For naturally spawning machines
+    --     if this and this:GetClassName().value == "ArcadeMachine" then
+    --         as.logic:addMachine(this)
+    --         print(this.uiComponent:GetGameController())
+    --     end
+    -- end)
+
+    Observe("ArcadeMachine", "OnBeginArcadeMinigameUI", function ()
+        utils.spendMoney(2)
     end)
 
     Observe("ArcadeMachineInkGameController", "OnUninitialize", function (self)
